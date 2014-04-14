@@ -24,7 +24,7 @@ For now this script can get:
 
 ##Installing
 
-You can install it by installing the package (soon)
+You can install it by installing the package
 
 		npm install gumer-psn
 		
