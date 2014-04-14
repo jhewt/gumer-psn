@@ -1,0 +1,29 @@
+{
+	"name": "gumer-psn",
+	"description": "A Playstation Network API",
+	"version": "0.1.0",
+	"author": {
+		"name": "José Augusto Sächs",
+		"email": "admin@jsachs.net"
+	},
+	"contributors": [
+		{
+			"name": "José Augusto Sächs",
+			"email": "admin@jsachs.net"
+		}
+	],
+	"dependencies": {
+		"htmlparser2": "3.4.0",
+		"request": "2.20.0"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git://github.com/jhewt/gumer-psn.git"
+	},
+	"bugs": {
+		"url": "http://github.com/jhewt/gumer-psn/issues"
+	},
+	"main": "psn.js",
+	"readmeFilename": "README.md",
+	"license": "MIT"
+}
