@@ -17,18 +17,18 @@ For now this script can get:
 * Streams
 * Real user integration (for now it uses only one account)
 
-##Requierements
+##Requirements
 * A valid PSN account *(can be new)*
 * Node.js >= 0.8.x
 * JavaScript knowledge, lol
 
 ##Installing
 
-You can install it by installing the package
+You can install it by using npm
 
 		npm install gumer-psn
 		
-You can also clone this repository by doing
+You can also clone this repository then installing it's 
 
 		git clone https://github.com/jhewt/gumer-psn.git
 		cd gumer-psn/
@@ -133,7 +133,7 @@ Once it has started, you can start asking profile or trophy data by going to:
 
 Contribute
 =========
-Contribute by cloning the repository and start making changes to make it better and better, other API has failed because of being very "Copyrighted" and closed source. This is different, I'm also planning on making a site using PSN profiles but I want everyone to join in order to make the perfect PSN API possible and FREE.
+Contribute by cloning the repository and start making changes, submit pull requests, features or issues to make it better and better, other API has failed because of being very "Copyrighted" and closed source. This is different, I'm also planning on making a site using PSN profiles but I want everyone to join in order to make the perfect PSN API possible and FREE.
 
 If you want to make a donation, feel free to do it to my paypal account: jose_sachs@hotmail.com.
 It helps me to prioritaze this project... and a coffe while coding isn't bad hehe.
