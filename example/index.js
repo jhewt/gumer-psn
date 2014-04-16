@@ -1,7 +1,7 @@
 /*!
 *
 * Gumer Playstation Network API
-* v0.1 - initial release
+* v0.1.1
 * ---
 * @desc 	A simple example of usage using Express, it returns the Raw object from Sony' servers
 * @author 	José A. Sächs (admin@jsachs.net / admin@smartpixel.com.ar / jose@animus.com.ar)
@@ -11,6 +11,7 @@
 var 
 	 gumerPSN 	= require('./psn')		// Gumer Playstation module
 	,express 	= require('express')	// Express
+	,bodyParser = require('body-parser')// bodyParser (for getting POST data)
 	,app 		= express()				// Express application instance
 	,idregex 	= /[A-Za-z0-9].{2,15}/ 	// A simple regex for PSN id's // TODO: Make it more accurate and fancy
 ;
@@ -18,12 +19,17 @@ var
 console.log('Starting PSN');
 
 gumerPSN.init({		// Our PSN Module, we have to start it once. - irkinsander
-	debug: 		true					// Let's set it true, it's still in early development. So, report everything that goes wrong please.
-	,email: 	"your_account"			// A valid PSN/SCE account (can be new one) // TODO: Using the user's credentials to do this.
-	,password: 	"your_password"			// Account's password, du'h
+	debug:		false				// Let's set it true, it's still in early development. So, report everything that goes wrong please.
+	,email:		"your_email"		// A valid PSN/SCE account (can be new one) // TODO: Using the user's credentials to do this.
+	,password:	"your_password"		// Account's password, du'h
+	,npLanguage:	"en"			// The language the trophy's name and description will shown as
+	,region: 	"us"				// The server region that will push data
 });
 
-app.param(function(name, fn){	// Taken from Express site, this takes /{{id}}/ parameter
+app.use(bodyParser());
+
+// Taken from Express site, this takes /{{id}}/ parameter
+app.param(function(name, fn){	
 	if (fn instanceof RegExp) {
 		return function(req, res, next, val){
 			var captures;
@@ -38,7 +44,8 @@ app.param(function(name, fn){	// Taken from Express site, this takes /{{id}}/ pa
 	}
 });
 
-app.get('/PSN/:id', function(req, res){ // Gets the ID owner's profile information and returns the JSON object.
+// Gets the ID owner's profile information and returns the JSON object.
+app.get('/PSN/:id', function(req, res){ 
 	gumerPSN.getProfile(req.params.id, function(error, profileData) {
 		if (!error) {
 			res.send(profileData)
@@ -57,8 +64,9 @@ app.get('/PSN/:id', function(req, res){ // Gets the ID owner's profile informati
 		}
 	})
 })
-app.get('/PSN/:id/trophies', function(req, res){ // Gets the ID owner's trophy (first 100) information and returns the JSON object.
-	gumerPSN.getTrophies(req.params.id, 0, 100, function(error, trophyData) {
+// Gets the ID owner's trophy (first 100) information and returns the JSON object.
+app.get('/PSN/:id/trophies', function(req, res){ 
+	gumerPSN.getTrophies(req.params.id, "m", 0, 100, function(error, trophyData) {
 		if (!error) {
 			res.send(trophyData)
 		}
@@ -76,6 +84,86 @@ app.get('/PSN/:id/trophies', function(req, res){ // Gets the ID owner's trophy (
 		}
 	})
 })
-
-app.listen(3000); // We listen in the port 3000
+// Gets the ID owner's trophies for the given game title including all DLC's
+app.get('/PSN/:id/trophies/:npCommID', function(req, res){ 
+	gumerPSN.getGameTrophies(req.params.id, req.params.npCommID, '', function(error, trophyData) {
+		if (!error) {
+			res.send(trophyData)
+		}
+		else {
+			if (trophyData.error.code == 2105356) {		// User not found code
+				res.send({
+					error: true, message: "PSN ID not found"
+				})
+			}
+			else {
+				res.send({
+					error: true, message: "Something went terribly wrong, submit an issue on GitHub please!"
+				})
+			}
+		}
+	})
+})
+// Gets the ID owner's trophies for the given game title including all DLC's
+app.get('/PSN/:id/trophies/:npCommID/groups', function(req, res){ 
+	gumerPSN.getGameTrophyGroups(req.params.id, req.params.npCommID, function(error, trophyData) {
+		if (!error) {
+			res.send(trophyData)
+		}
+		else {
+			if (trophyData.error.code == 2105356) {		// User not found code
+				res.send({
+					error: true, message: "PSN ID not found"
+				})
+			}
+			else {
+				res.send({
+					error: true, message: "Something went terribly wrong, submit an issue on GitHub please!"
+				})
+			}
+		}
+	})
+})
+// Gets the ID owner's trophies for the given game title for the given group (DLC)
+app.get('/PSN/:id/trophies/:npCommID/groups/:groupID', function(req, res){ 
+	gumerPSN.getGameTrophies(req.params.id, req.params.npCommID, req.params.groupID, function(error, trophyData) {
+		if (!error) {
+			res.send(trophyData)
+		}
+		else {
+			if (trophyData.error.code == 2105356) {		// User not found code
+				res.send({
+					error: true, message: "PSN ID not found"
+				})
+			}
+			else {
+				res.send({
+					error: true, message: "Something went terribly wrong, submit an issue on GitHub please!"
+				})
+			}
+		}
+	})
+})
+// Gets the info for the given DLC or game's default trophy
+app.get('/PSN/:id/trophies/:npCommID/:trophyID', function(req, res){ 
+	gumerPSN.getTrophy(req.params.id, req.params.npCommID, '', req.params.trophyID, function(error, trophyData) {
+		if (!error) {
+			res.send(trophyData)
+		}
+		else {
+			if (trophyData.error.code == 2105356) {		// User not found code
+				res.send({
+					error: true, message: "PSN ID not found"
+				})
+			}
+			else {
+				res.send({
+					error: true, message: "Something went terribly wrong, submit an issue on GitHub please!"
+				})
+			}
+		}
+	})
+})
+// We listen in the port 3000
+app.listen(3000); 
 console.log('gumerPSN Example running at http://localhost:3000/');
