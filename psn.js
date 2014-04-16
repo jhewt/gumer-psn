@@ -230,7 +230,6 @@ function psnGETRequest (url, callback) {
 			}
 		}
 	;
-	console.log('GET '+ url)
 	request.get(reqOptions, function(error, response, body) {
 		var responseJSON;
 		responseJSON = JSON.parse(body);
