@@ -42,7 +42,7 @@ var
 
 	// URL Vars used for login to PSN and pulling information
 	,psnURL = {
-		 SignIN: 		'https://reg.api.km.playstation.net/regcam/mobile/sign-in.html?redirectURL='+psnVars.redirectURL+'&client_id='+psnVars.redirectURL+'&scope='+psnVars.scope 	// Initial login (here PSN creates the session and the csrf token)
+		 SignIN: 		'https://reg.api.km.playstation.net/regcam/mobile/sign-in.html?redirectURL='+psnVars.redirectURL+'&client_id='+psnVars.client_id+'&scope='+psnVars.scope 	// Initial login (here PSN creates the session and the csrf token)
 		,SignINPOST: 	'https://reg.api.km.playstation.net/regcam/mobile/signin'		// POST DATA for login must be sended here
 		,oauth: 		'https://auth.api.sonyentertainmentnetwork.com/2.0/oauth/token' 	// PSN's OAuth implementation Uri
 		,profileData: 	'https://{{region}}-prof.np.community.playstation.net/userProfile/v1/users/{{id}}/profile?fields=%40default,relation,requestMessageFlag,presence,%40personalDetail,trophySummary'
