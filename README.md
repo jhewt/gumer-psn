@@ -25,18 +25,18 @@ For now this script can get:
 * Notifications
 * User friend list (depends on user's privacy)
 
-##Requierements
+##Requirements
 * A valid PSN account *(can be new)*
 * Node.js >= 0.8.x
 * JavaScript knowledge, lol
 
 ##Installing
 
-You can install it by installing the package
+You can install it with the package manager
 
 		npm install gumer-psn
 		
-You can also clone this repository by doing
+Or clone the repository and install the dependencies
 
 		git clone https://github.com/jhewt/gumer-psn.git
 		cd gumer-psn/
