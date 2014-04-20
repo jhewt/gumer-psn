@@ -1,11 +1,13 @@
 gumer-psn
 =========
 
-A Playstation Network API written in Node.js (maybe more languages in the future)
+A Playstation Network API written in Node.js
 
 **v0.1.1**
 
-PHP Port by @ilendemli: https://github.com/ilendemli/gumer-psn-php
+Another lenguages:
+
+PHP: https://github.com/ilendemli/gumer-psn-php by @ilendemli
 
 ##About
 This script uses the method found in Sony's official Android application that sends JSON in every response and NOT xml.
