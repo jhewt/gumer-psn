@@ -5,7 +5,7 @@ A Playstation Network API written in Node.js
 
 **v0.1.1**
 
-Another lenguages:
+Another languages:
 
 PHP: https://github.com/ilendemli/gumer-psn-php by @ilendemli
 
