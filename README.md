@@ -20,6 +20,7 @@ For now this script can get:
 	* **NOTE**: It doesn't get hidden trophies (for now). *See known limitations below*
  
 ###Features planned
+* Caching
 * Friends
  	* Friends management (add, delete, block)
 	* Messaging (chat) *Voice/Image support will be added someday, no way to test it without a PSVITA/PS3/PS4 system*
