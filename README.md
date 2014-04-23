@@ -29,6 +29,7 @@ For now this script can get:
 * User's login for self management
 * Notifications
 * User friend list (depends on user's privacy)
+* Gems (Pronuntiation for PS4, and a few console downloads) *NOTE: I will not share SONY's HmacSHA1 key here on GitHub*
 
 ##Requirements
 * A valid PSN account *(can be new)*
