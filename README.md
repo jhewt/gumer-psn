@@ -3,7 +3,7 @@ gumer-psn
 
 A Playstation Network API written in Node.js
 
-**v0.1.1**
+**v0.1.2**
 
 Another languages:
 
@@ -17,7 +17,6 @@ For now this script can get:
 	* Summary whithin all games owned (that supports trophies)
 	* by gameID (npCommunicationID) 
 	* by group *(DLC, Expansion)*
-	* **NOTE**: It doesn't get hidden trophies (for now). *See known limitations below*
  
 ###Features planned
 * Caching
@@ -36,6 +35,9 @@ For now this script can get:
 * Node.js >= 0.8.x
 * JavaScript knowledge, lol
 
+##Known Limitations
+* It doesn't display **hidden trophies** *this is a server-side restriction*. If you do have another way to get them please share it.
+
 ##Installing
 
 You can install it with the package manager
@@ -49,6 +51,22 @@ Or clone the repository and install the dependencies
 		npm install
 		
 ##Usage
+
+###Using the example
+This example uses Express
+
+    cp example/index.js ./
+    npm install express
+    node index.js
+		
+Once it has started, you can start asking profile or trophy data by going to: 
+*	**Profile**: http://localhost:3000/PSN/**your_id**
+*	**Trophies Summary**: http://localhost:3000/PSN/**your_id**/trophies
+*	**Trophies by gameID**: http://localhost:3000/PSN/**your_id**/trophies/**gameID**
+*	**Trophies groups**: http://localhost:3000/PSN/**your_id**/trophies/**gameID**/groups
+*	**Trophies by groupID**: http://localhost:3000/PSN/**your_id**/trophies/**gameID**/groups/**groupID**
+*	**Trophy info by tophyID**: http://localhost:3000/PSN/**your_id**/trophies/**gameID**/**tophyID**
+
 ###Init
 ```javascript
 var gumerPSN 	= require('./psn');
@@ -280,24 +298,6 @@ Output:
 	}]
 }
 ```
-
-###Using the example
-This example uses Express
-
-    cd example/
-    npm install express
-    node index.js
-		
-Once it has started, you can start asking profile or trophy data by going to: 
-*	**Profile**: http://localhost:3000/PSN/**your_id**
-*	**Trophies Summary**: http://localhost:3000/PSN/**your_id**/trophies
-*	**Trophies by gameID**: http://localhost:3000/PSN/**your_id**/trophies/**gameID**
-*	**Trophies groups**: http://localhost:3000/PSN/**your_id**/trophies/**gameID**/groups
-*	**Trophies by groupID**: http://localhost:3000/PSN/**your_id**/trophies/**gameID**/groups/**groupID**
-*	**Trophy info by tophyID**: http://localhost:3000/PSN/**your_id**/trophies/**gameID**/**tophyID**
-
-##Known Limitations
-* It doesn't display **hidden trophies** *this is a server-side restriction*. If you do have another way to get them please share it.
 
 
 Contribute

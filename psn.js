@@ -1,7 +1,7 @@
 /*!
 *
 * Gumer Playstation Network API
-* v0.1.1
+* v0.1.2
 * ---
 * @desc 	This pulls information from SONY's PSN servers
 * @author 	José A. Sächs (admin@jsachs.net / admin@smartpixel.com.ar / jose@animus.com.ar)
@@ -22,14 +22,13 @@ var
 	}
 	,regions		= ["us","ca","mx","cl","pe","ar","co","br","gb","ie","be","lu","nl","fr","de","at","ch","it","pt","dk","fi","no","se","au","nz","es","ru","ae","za","pl","gr","sa","cz","bg","hr","ro","si","hu","sk","tr","bh","kw","lb","om","qa","il","mt","is","cy","in","ua","hk","tw","sg","my","id","th","jp","kr"] // Know SONY's servers
 	,languages		= ["ja","en","en-GB","fr","es","es-MX","de","it","nl","pt","pt-BR","ru","pl","fi","da","no","sv","tr","ko","zh-CN","zh-TW"] // All languages SONY accepts as parameter
-	,request 		= require('request')
-	,htmlparser 	= require("htmlparser2")
+	,request 		= require('request').defaults({jar: true}) // We set jar to true to enable cookie saving (Only used for the login process)
 	,debug 			= function (message) {
 		if (options.debug) console.log('gPSN | ' + message);
 	}
 	// Vars required to perform REQUESTS to Sony' servers
 	,psnVars = {
-		redirectURL: 	'com.scee.psxandroid.scecompcall%3A%2F%2Fredirect' 	// Android URL
+		SENBaseURL: 	'https://auth.api.sonyentertainmentnetwork.com'
 		,redirectURL_oauth: 'com.scee.psxandroid.scecompcall://redirect'	// Android Callback URL
 		,client_id: 	'b0d0d7ad-bb99-4ab1-b25e-afa0c76577b0' 				// Client ID
 		,scope: 		'sceapp' 				// SEN Scope
@@ -38,55 +37,20 @@ var
 		,authCode : 	''						// authCode needed to ask for an access token
 		,client_secret: 'Zo4y8eGIa3oazIEp' 		// Secret string, this is most likely to change overtime. If it changes, please contribute to this project.
 		,duid: 			'00000005006401283335353338373035333434333134313a433635303220202020202020202020202020202020' 	// I still don't know what "duid" stands for... if you do, create an issue about it please!
+		,cltm: 			'1399637146935'
+		,service_entity: 'urn:service-entity:psn'
 	}
 
 	// URL Vars used for login to PSN and pulling information
 	,psnURL = {
-		 SignIN: 		'https://reg.api.km.playstation.net/regcam/mobile/sign-in.html?redirectURL='+psnVars.redirectURL+'&client_id='+psnVars.client_id+'&scope='+psnVars.scope 	// Initial login (here PSN creates the session and the csrf token)
-		,SignINPOST: 	'https://reg.api.km.playstation.net/regcam/mobile/signin'		// POST DATA for login must be sended here
+		SignIN:  		psnVars.SENBaseURL + '/2.0/oauth/authorize?response_type=code&service_entity='+psnVars.service_entity+'&returnAuthCode=true&cltm='+psnVars.cltm+'&redirect_uri='+psnVars.redirectURL_oauth+'&client_id='+psnVars.client_id+'&scope='+psnVars.scope_psn // New SEN login page (no csrfToken this time)
+		,SignINPOST: 	psnVars.SENBaseURL + '/login.do'		// POST DATA for login must be sended here
 		,oauth: 		'https://auth.api.sonyentertainmentnetwork.com/2.0/oauth/token' 	// PSN's OAuth implementation Uri
 		,profileData: 	'https://{{region}}-prof.np.community.playstation.net/userProfile/v1/users/{{id}}/profile?fields=%40default,relation,requestMessageFlag,presence,%40personalDetail,trophySummary'
 		,trophyData: 	'https://{{region}}-tpy.np.community.playstation.net/trophy/v1/trophyTitles?fields=%40default&npLanguage={{lang}}&iconSize={{iconsize}}&platform=PS3%2CPSVITA%2CPS4&offset={{offset}}&limit={{limit}}&comparedUser={{id}}'	// NOTE: All server are in the US, the only change are market restrictions
 		,trophyDataList:'https://{{region}}-tpy.np.community.playstation.net/trophy/v1/trophyTitles/{{npCommunicationId}}/trophyGroups/{{groupId}}/trophies?fields=%40default,trophyRare,trophyEarnedRate&npLanguage={{lang}}'
 		,trophyGroupList:'https://{{region}}-tpy.np.community.playstation.net/trophy/v1/trophyTitles/{{npCommunicationId}}/trophyGroups/?npLanguage={{lang}}'
 		,trophyInfo:	'https://{{region}}-tpy.np.community.playstation.net/trophy/v1/trophyTitles/{{npCommunicationId}}/trophyGroups/{{groupId}}/trophies/{{trophyID}}?fields=%40default,trophyRare,trophyEarnedRate&npLanguage={{lang}}'
-	}
-	,authCodeRegex = /authCode\=([0-9A-Za-z]*)(?=[\'])/i 	// We use this regex to get the authCode (the response is a HTML)
-	,loginParser = function(body, callback) { // Parsing HTML for getting the csrf token
-		var parser = new htmlparser.Parser({ 
-			onopentag: function(name, attribs){
-				if (name === "input" && attribs.name === "csrfToken"){
-					debug('csrf token obtained: ' + attribs.value);
-					psnVars.csrfToken = attribs.value;
-					callback();
-				}
-			}
-		})
-		parser.write(body)
-		parser.end();
-	}
-	,errorParser = function(body, callback) { // Found what is the error displayed in the HTML login page
-		var 
-			errorSpanFound = false
-			,errorText = ""
-			,parser = new htmlparser.Parser({ 
-			onopentag: function(name, attribs){
-				if (name === "span" && attribs.style === "${classOrStyle}"){
-					errorSpanFound = true;
-				}
-			}
-			,ontext: function(text) {
-				if(errorSpanFound) errorText = text;
-			}
-			,onclosetag: function(name) {
-				errorSpanFound = false;
-			}
-			,onend: function() {
-				callback(errorText)
-			}
-		})
-		parser.write(body)
-		parser.end();
 	}
 	,accessToken = ''
 	,refreshToken = ''
@@ -97,43 +61,45 @@ var
 * @param 	Function callback - Calls this function once the login is complete
 */
 function initLogin(callback) {
-	request.get(psnURL.SignIN, function (error, response, body) {
-		if (!error && response.statusCode == 200) {
-			loginParser(body, function() {
-				(typeof callback === "function" ? getLogin(callback) : getLogin());
-			})
+	debug('Getting login');
+	request.get({ 
+			url: psnURL.SignIN
+			, headers : {
+				'User-Agent': 'Mozilla/5.0 (Linux; U; Android 4.3; '+options.npLanguage+'; C6502 Build/10.4.1.B.0.101) AppleWebKit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30 PlayStation App/1.60.5/'+options.npLanguage+'/'+options.npLanguage
+			}
 		}
+		, function (error, response, body) {
+			(typeof callback === "function" ? getLogin(callback, psnVars.SENBaseURL + response.req.path) : getLogin(undefined, psnVars.SENBaseURL + response.req.path));
 	})
 }
 /*
 * @desc 	Login into PSN/SEN and creates a session with an auth code
 * @param 	Function callback - Calls this function once the login is complete
 */
-function getLogin(callback) {
-	request.post(psnURL.SignINPOST, {form:{
-			 'email'		: options.email
-			,'password'		: options.password
-			,'csrfToken'	: psnVars.csrfToken
-			,'client_id'	: psnVars.client_id
-			,'scope'		: psnVars.scope
-			,'redirectURL'	: psnVars.redirectURL
-			,'locale' 		: ''
-		}}, function (error, response, body) {
-			if (!error) {
-				if(authCodeRegex.test(body)) {
-					psnVars.authCode = authCodeRegex.exec(body)[1];
+function getLogin(callback, url) {
+	request.post(psnURL.SignINPOST
+		,{
+			headers: {
+				'Origin':'https://auth.api.sonyentertainmentnetwork.com'
+				,'Referer': url
+			}
+			,form:{
+				'params' 		: 'service_entity=psn'
+				,'j_username'	: options.email
+				,'j_password'	: options.password
+			}
+		}, function (error, response, body) {
+			request.get(response.headers.location, function (error, response, body) {
+				if (!error) {
+					var urlString = unescape(response.req.path);
+					psnVars.authCode = urlString.substr(urlString.indexOf("authCode=") + 9, 6);
 					debug('authCode obtained: ' + psnVars.authCode);
-					getAccessToken(psnVars.authCode, callback)
+					getAccessToken(psnVars.authCode, callback);	
 				}
 				else {
-					errorParser(body, function(error) {
-						debug('ERROR: ' + error);
-					})
+					debug('ERROR: ' + error)
 				}
-			}
-			else {
-				debug('ERROR: ' + error)
-			}
+			})
 		}
 	)
 }
@@ -174,7 +140,7 @@ function getAccessToken(authCode, callback) {
 	}
 	else {
 		debug('Login for the first time');
-		request.post(psnURL.oauth, {form:{ // Firs time login
+		request.post(psnURL.oauth, {form:{ // Firts time login
 				 'grant_type'	: 'authorization_code'
 				,'client_id'	: psnVars.client_id
 				,'client_secret': psnVars.client_secret
@@ -199,11 +165,11 @@ function getAccessToken(authCode, callback) {
 						if (typeof callback === "function") callback();
 					}
 					else {
-						debug('ERROR: ' + responseJSON)
+						debug('ERROR: ' + JSON.stringify(responseJSON))
 					}
 				}
 				else {
-					debug('ERROR: ' + error)
+					debug('ERROR: ' + JSON.stringify(error))
 				}
 		})	
 	}

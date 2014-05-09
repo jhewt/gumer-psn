@@ -1,7 +1,7 @@
 /*!
 *
 * Gumer Playstation Network API
-* v0.1.1
+* v0.1.2
 * ---
 * @desc 	A simple example of usage using Express, it returns the Raw object from Sony' servers
 * @author 	José A. Sächs (admin@jsachs.net / admin@smartpixel.com.ar / jose@animus.com.ar)
@@ -11,22 +11,19 @@
 var 
 	 gumerPSN 	= require('./psn')		// Gumer Playstation module
 	,express 	= require('express')	// Express
-	,bodyParser = require('body-parser')// bodyParser (for getting POST data)
 	,app 		= express()				// Express application instance
 	,idregex 	= /[A-Za-z0-9].{2,15}/ 	// A simple regex for PSN id's // TODO: Make it more accurate and fancy
 ;
 
-console.log('Starting PSN');
+console.log('Starting gPSN');
 
 gumerPSN.init({		// Our PSN Module, we have to start it once. - irkinsander
-	debug:		false				// Let's set it true, it's still in early development. So, report everything that goes wrong please.
-	,email:		"your_email"		// A valid PSN/SCE account (can be new one) // TODO: Using the user's credentials to do this.
-	,password:	"your_password"		// Account's password, du'h
+	debug:		true				// Let's set it true, it's still in early development. So, report everything that goes wrong please.
+	,email:		"{{username}}"		// A valid PSN/SCE account (can be new one) // TODO: Using the user's credentials to do this.
+	,password:	"{{password}}"		// Account's password, du'h
 	,npLanguage:	"en"			// The language the trophy's name and description will shown as
-	,region: 	"us"				// The server region that will push data
+	,region: 		"us"			// The server region that will push data
 });
-
-app.use(bodyParser());
 
 // Taken from Express site, this takes /{{id}}/ parameter
 app.param(function(name, fn){	
@@ -58,7 +55,7 @@ app.get('/PSN/:id', function(req, res){
 			}
 			else {
 				res.send({
-					error: true, message: "Something went terribly wrong, submit an issue on GitHub please!"
+					error: true, message: "Something went terribly wrong, submit an issue on GitHub please!", response: profileData
 				})
 			}
 		}
@@ -78,7 +75,7 @@ app.get('/PSN/:id/trophies', function(req, res){
 			}
 			else {
 				res.send({
-					error: true, message: "Something went terribly wrong, submit an issue on GitHub please!"
+					error: true, message: "Something went terribly wrong, submit an issue on GitHub please!", response: trophyData
 				})
 			}
 		}
@@ -98,7 +95,7 @@ app.get('/PSN/:id/trophies/:npCommID', function(req, res){
 			}
 			else {
 				res.send({
-					error: true, message: "Something went terribly wrong, submit an issue on GitHub please!"
+					error: true, message: "Something went terribly wrong, submit an issue on GitHub please!", response: trophyData
 				})
 			}
 		}
@@ -118,7 +115,7 @@ app.get('/PSN/:id/trophies/:npCommID/groups', function(req, res){
 			}
 			else {
 				res.send({
-					error: true, message: "Something went terribly wrong, submit an issue on GitHub please!"
+					error: true, message: "Something went terribly wrong, submit an issue on GitHub please!", response: trophyData
 				})
 			}
 		}
@@ -138,7 +135,7 @@ app.get('/PSN/:id/trophies/:npCommID/groups/:groupID', function(req, res){
 			}
 			else {
 				res.send({
-					error: true, message: "Something went terribly wrong, submit an issue on GitHub please!"
+					error: true, message: "Something went terribly wrong, submit an issue on GitHub please!", response: trophyData
 				})
 			}
 		}
@@ -158,7 +155,7 @@ app.get('/PSN/:id/trophies/:npCommID/:trophyID', function(req, res){
 			}
 			else {
 				res.send({
-					error: true, message: "Something went terribly wrong, submit an issue on GitHub please!"
+					error: true, message: "Something went terribly wrong, submit an issue on GitHub please!", response: trophyData
 				})
 			}
 		}
