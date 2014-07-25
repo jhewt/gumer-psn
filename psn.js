@@ -51,6 +51,7 @@ var
 		,oauth: 		'https://auth.api.sonyentertainmentnetwork.com/2.0/oauth/token' 	// PSN's OAuth implementation Uri
 		,profileData: 	'https://{{region}}-prof.np.community.playstation.net/userProfile/v1/users/{{id}}/profile?fields=%40default,relation,requestMessageFlag,presence,%40personalDetail,trophySummary'
 		,addRemoveFriend: 'https://{{region}}-prof.np.community.playstation.net/userProfile/v1/users/{{id}}/friendList/{{friendId}}'
+		,sendFriendRequest: 'https://{{region}}-prof.np.community.playstation.net/userProfile/v1/users/{{id}}/friendList/{{friendId}}?requestMessage={{requestMessage}}'
 		,friendData:    'https://{{region}}-prof.np.community.playstation.net/userProfile/v1/users/{{id}}/friendList?fields=%40default,relation,onlineId,avatarUrl,plus,%40personalDetail,trophySummary&sort=onlineId&avatarSize=m&limit=32&offset={{offset}}&friendStatus={{friendStatus}}'
 		,trophyData: 	'https://{{region}}-tpy.np.community.playstation.net/trophy/v1/trophyTitles?fields=%40default&npLanguage={{lang}}&iconSize={{iconsize}}&platform=PS3%2CPSVITA%2CPS4&offset={{offset}}&limit={{limit}}&comparedUser={{id}}'	// NOTE: All server are in the US, the only change are market restrictions
 		,trophyDataList:'https://{{region}}-tpy.np.community.playstation.net/trophy/v1/trophyTitles/{{npCommunicationId}}/trophyGroups/{{groupId}}/trophies?fields=%40default,trophyRare,trophyEarnedRate&npLanguage={{lang}}'
@@ -340,12 +341,14 @@ function psnGETRequest (url, callback) {
 /*
 * @desc 	Creates POST request (Not in use yet)
 * @param 	String		url 		- The URL to send data to
+* @param 	String		content 	- The content to send along with the post, if any.
 * @param 	Function 	callback 	- Calls this function once the request is complete
 */
-function psnPOSTRequest (url, callback) {
+function psnPOSTRequest (url, content, callback) {
 	var 
 		reqOptions = {
 			 url: url
+			 ,json: content
 			,method : 'POST'
 			,headers: {
 				'Access-Control-Request-Method': 'POST'
@@ -361,20 +364,25 @@ function psnPOSTRequest (url, callback) {
 	;
 	request.post(reqOptions, function(error, response, body) {
 		var responseJSON;
-		responseJSON = JSON.parse(body);
+		// The body IS json, hence we directly set it.
+		responseJSON = body;
 		if(!error) {
-			if (response.statusCode == 200) {
+			debug(response.statusCode);
+			// 204: "no-content", does not return json.
+			if (response.statusCode == 200 || response.statusCode == 204) {
+				debug('Friend request sent');
 				callback(false, responseJSON) // Everything seems to be ok
 			}
 			else if(response.statusCode == 401) {
 				if ('error' in responseJSON) {
-					if (responseJSON.error.code === 2105858 || responseJSON.error.code === 2138626) {
+					if (response.error.code && (responseJSON.error.code === 2105858 || responseJSON.error.code === 2138626)) {
 						debug('Token has expired, asking for new one');
 						initLogin(function() {
 							psnGETRequest(url, callback)	
 						});
 					}
 					else {
+
 						callback(true, responseJSON) // Return the error
 					}
 				}
@@ -474,6 +482,26 @@ exports.addRemoveFriend = function (friendId, addFriend, callback) {
 		psnDELETERequest(psnURL.addRemoveFriend.replace("{{id}}", options.psnId).replace("{{friendId}}", friendId),callback);
 			})
 		}
+	}
+}
+/*
+* @desc 	Send a friend request to a given PSN ID
+* @param 	String 		psnid 			- The user PSN ID to send the request to.
+* @param 	String 		requestMessage 	- The request message.
+* @param 	Function 	callback 		- Calls this function once the request is complete
+*/
+exports.sendFriendRequest = function (psnid, requestMessage, callback) {
+	if (accessToken.length > 1) {
+		debug('Sending a friend request to ' + psnid);
+		var content = {"requestMessage" : requestMessage}
+		psnPOSTRequest(psnURL.sendFriendRequest.replace("{{id}}", options.psnId).replace("{{friendId}}", psnid).replace("{{requestMessage}}", requestMessage), content, callback);
+	}
+	else {
+		debug('Asking for new token');
+		getAccessToken('',function() {
+			var content = {"requestMessage" : requestMessage}
+			psnPOSTRequest(psnURL.sendFriendRequest.replace("{{id}}", options.psnId).replace("{{friendId}}", psnid).replace("{{requestMessage}}", requestMessage), content, callback);
+		})
 	}
 }
 /*
