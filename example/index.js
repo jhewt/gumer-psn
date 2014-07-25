@@ -131,6 +131,19 @@ app.get('/PSN/friendMe/getLink', function(req, res){
 		}
 	})
 })
+// Get a PSN users recent activity list list
+app.get('/PSN/recentActivity/:id/:newsFeed/:pageNumber', function(req, res){ 
+	gumerPSN.getRecentActivity(req.params.id, req.params.newsFeed, req.params.pageNumber, function(error, recentActivityData) {
+		if (!error) {
+			res.send(recentActivityData)
+		}
+		else {
+				res.send({
+					error: true, message: "Something went terribly wrong, submit an issue on GitHub please!", response: recentActivityData
+				})
+		}
+	})
+})
 // Get a PSN users notification list
 app.get('/PSN/notifications/getNotifications', function(req, res){ 
 	gumerPSN.getNotifications(req.params.id, function(error, notificationData) {

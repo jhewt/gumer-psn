@@ -449,6 +449,25 @@ exports.getProfile = function (psnid, callback) {
 	}
 }
 /*
+* @desc 	Get the recent activity list for the PSN user.
+* @param 	String 		psnid 			- User's PSN ID.
+* @param 	String 		newsFeed 		- Takes in "feed" or "news", returns different feeds.
+* @param 	int 		pageNumber 		- The recent activity page number.
+* @param 	Function 	callback 		- Calls this function once the request is complete
+*/
+exports.getRecentActivity = function (psnid, newsFeed, pageNumber, callback) {
+	if (accessToken.length > 1) {
+		debug('Getting recent activity feed for ' + options.psnId);
+		psnGETRequest(psnURL.recentActivityFeed.replace("{{id}}", options.psnId).replace("{{newsFeed}}", newsFeed).replace("{{pageNumber}}", pageNumber),callback);
+	}
+	else {
+		debug('Asking for new token');
+		getAccessToken('',function() {
+			psnGETRequest(psnURL.recentActivityFeed.replace("{{id}}", options.psnId).replace("{{newsFeed}}", newsFeed).replace("{{pageNumber}}", pageNumber),callback);
+		})
+	}
+}
+/*
 * @desc 	Get the notifications for the current user
 * @param 	String 		psnid 		- User's PSN ID
 * @param 	Function 	callback 	- Calls this function once the request is complete
@@ -463,7 +482,7 @@ exports.getNotifications = function (psnid, callback) {
 		getAccessToken('',function() {
 			psnGETRequest(psnURL.notificationsUrl.replace("{{id}}", options.psnId).replace("{{lang}}", options.npLanguage),callback);
 		})
-	
+
 /*
 * @desc 	Add or remove a friend from the current PSN users friend list.
 * @param 	String 		friendId 	- The ID the user wishes to either add or remove
