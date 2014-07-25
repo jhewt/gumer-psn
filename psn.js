@@ -449,6 +449,22 @@ exports.getProfile = function (psnid, callback) {
 	}
 }
 /*
+* @desc 	Get the notifications for the current user
+* @param 	String 		psnid 		- User's PSN ID
+* @param 	Function 	callback 	- Calls this function once the request is complete
+*/
+exports.getNotifications = function (psnid, callback) {
+	if (accessToken.length > 1) {
+		debug('Getting notifications for ' + options.psnId);
+		psnGETRequest(psnURL.notificationsUrl.replace("{{id}}", options.psnId).replace("{{lang}}", options.npLanguage),callback);
+	}
+	else {
+		debug('Asking for new token');
+		getAccessToken('',function() {
+			psnGETRequest(psnURL.notificationsUrl.replace("{{id}}", options.psnId).replace("{{lang}}", options.npLanguage),callback);
+		})
+	
+/*
 * @desc 	Add or remove a friend from the current PSN users friend list.
 * @param 	String 		friendId 	- The ID the user wishes to either add or remove
 * @param 	Bool 		addFriend   - If true, add the friend. If false, delete the friend.

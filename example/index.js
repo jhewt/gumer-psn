@@ -131,6 +131,19 @@ app.get('/PSN/friendMe/getLink', function(req, res){
 		}
 	})
 })
+// Get a PSN users notification list
+app.get('/PSN/notifications/getNotifications', function(req, res){ 
+	gumerPSN.getNotifications(req.params.id, function(error, notificationData) {
+		if (!error) {
+			res.send(notificationData)
+		}
+		else {
+				res.send({
+					error: true, message: "Something went terribly wrong, submit an issue on GitHub please!", response: notificationData
+				})
+		}
+	})
+})
 // Gets the ID owner's trophy (first 100) information and returns the JSON object.
 app.get('/PSN/:id/trophies', function(req, res){ 
 	gumerPSN.getTrophies(req.params.id, "m", 0, 100, function(error, trophyData) {
