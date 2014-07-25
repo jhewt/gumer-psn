@@ -118,6 +118,19 @@ app.get('/PSN/sendFriendRequest/:id', function(req, res){
 		}
 	})
 })
+// Gets a short URL friend request
+app.get('/PSN/friendMe/getLink', function(req, res){ 
+	gumerPSN.getFriendRequestUrl("", function(error, friendRequestUrlData) {
+		if (!error) {
+			res.send(friendRequestUrlData)
+		}
+		else {
+				res.send({
+					error: true, message: "Something went terribly wrong, submit an issue on GitHub please!", response: friendRequestUrlData
+				})
+		}
+	})
+})
 // Gets the ID owner's trophy (first 100) information and returns the JSON object.
 app.get('/PSN/:id/trophies', function(req, res){ 
 	gumerPSN.getTrophies(req.params.id, "m", 0, 100, function(error, trophyData) {

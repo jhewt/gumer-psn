@@ -53,6 +53,7 @@ var
 		,addRemoveFriend: 'https://{{region}}-prof.np.community.playstation.net/userProfile/v1/users/{{id}}/friendList/{{friendId}}'
 		,sendFriendRequest: 'https://{{region}}-prof.np.community.playstation.net/userProfile/v1/users/{{id}}/friendList/{{friendId}}?requestMessage={{requestMessage}}'
 		,friendData:    'https://{{region}}-prof.np.community.playstation.net/userProfile/v1/users/{{id}}/friendList?fields=%40default,relation,onlineId,avatarUrl,plus,%40personalDetail,trophySummary&sort=onlineId&avatarSize=m&limit=32&offset={{offset}}&friendStatus={{friendStatus}}'
+		,friendMe: 'https://friendme.sonyentertainmentnetwork.com/friendme/api/v1/c2s/users/me/friendrequest'
 		,trophyData: 	'https://{{region}}-tpy.np.community.playstation.net/trophy/v1/trophyTitles?fields=%40default&npLanguage={{lang}}&iconSize={{iconsize}}&platform=PS3%2CPSVITA%2CPS4&offset={{offset}}&limit={{limit}}&comparedUser={{id}}'	// NOTE: All server are in the US, the only change are market restrictions
 		,trophyDataList:'https://{{region}}-tpy.np.community.playstation.net/trophy/v1/trophyTitles/{{npCommunicationId}}/trophyGroups/{{groupId}}/trophies?fields=%40default,trophyRare,trophyEarnedRate&npLanguage={{lang}}'
 		,trophyGroupList:'https://{{region}}-tpy.np.community.playstation.net/trophy/v1/trophyTitles/{{npCommunicationId}}/trophyGroups/?npLanguage={{lang}}'
@@ -520,6 +521,23 @@ exports.getFriendsList = function (psnid, offset, friendStatus, callback) {
 		debug('Asking for new token');
 		getAccessToken('',function() {
 			psnGETRequest(psnURL.friendData.replace("{{id}}", psnid).replace("{{offset}}", offset).replace("{{friendStatus}}", friendStatus),callback);
+		})
+	}
+}
+/*
+* @desc 	Get SMS/Short URL friend request link
+* @param 	Function 	callback 	- Calls this function once the request is complete
+*/
+exports.getFriendRequestUrl = function (test, callback) {
+	var content = {"type" : "ONE"};
+	if (accessToken.length > 1) {
+		debug('Getting Short URL friend request');
+		psnPOSTRequest(psnURL.friendMe,content,callback);
+	}
+	else {
+		debug('Asking for new token');
+		getAccessToken('',function() {
+			psnPOSTRequest(psnURL.friendMe,content,callback);
 		})
 	}
 }
