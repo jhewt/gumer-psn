@@ -61,6 +61,28 @@ app.get('/PSN/:id', function(req, res){
 		}
 	})
 })
+// Gets the friends list of the PSN user. 
+// The offset is needed as you can only request a limited amount of friends at a time.
+// As a result, you must keep track of the offset to get the entire friend list.
+app.get('/PSN/:id/friendList/:friendStatus/:offset', function(req, res){ 
+	gumerPSN.getFriendsList(req.params.id, req.params.offset, req.params.friendStatus, function(error, friendData) {
+		if (!error) {
+			res.send(friendData)
+		}
+		else {
+			if (friendData.error.code == 2105356) {		// User not found code
+				res.send({
+					error: true, message: "PSN ID not found"
+				})
+			}
+			else {
+				res.send({
+					error: true, message: "Something went terribly wrong, submit an issue on GitHub please!", response: friendData
+				})
+			}
+		}
+	})
+})
 // Gets the ID owner's trophy (first 100) information and returns the JSON object.
 app.get('/PSN/:id/trophies', function(req, res){ 
 	gumerPSN.getTrophies(req.params.id, "m", 0, 100, function(error, trophyData) {
