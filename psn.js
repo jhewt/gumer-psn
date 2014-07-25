@@ -17,8 +17,11 @@ var
 		// @TODO: Using user's account to login and use (it can be used in the browser meaning less server requests)
 		,email: 	''
 		,password: 	''
+		,psnId: ''
 		,region: 	'us'
 		,npLanguage : 'en'
+		,accountId : ''
+		,mAccountId: ''
 	}
 	,regions		= ["us","ca","mx","cl","pe","ar","co","br","gb","ie","be","lu","nl","fr","de","at","ch","it","pt","dk","fi","no","se","au","nz","es","ru","ae","za","pl","gr","sa","cz","bg","hr","ro","si","hu","sk","tr","bh","kw","lb","om","qa","il","mt","is","cy","in","ua","hk","tw","sg","my","id","th","jp","kr"] // Know SONY's servers
 	,languages		= ["ja","en","en-GB","fr","es","es-MX","de","it","nl","pt","pt-BR","ru","pl","fi","da","no","sv","tr","ko","zh-CN","zh-TW"] // All languages SONY accepts as parameter
@@ -47,11 +50,13 @@ var
 		,SignINPOST: 	psnVars.SENBaseURL + '/login.do'		// POST DATA for login must be sended here
 		,oauth: 		'https://auth.api.sonyentertainmentnetwork.com/2.0/oauth/token' 	// PSN's OAuth implementation Uri
 		,profileData: 	'https://{{region}}-prof.np.community.playstation.net/userProfile/v1/users/{{id}}/profile?fields=%40default,relation,requestMessageFlag,presence,%40personalDetail,trophySummary'
+		,addRemoveFriend: 'https://{{region}}-prof.np.community.playstation.net/userProfile/v1/users/{{id}}/friendList/{{friendId}}'
 		,friendData:    'https://{{region}}-prof.np.community.playstation.net/userProfile/v1/users/{{id}}/friendList?fields=%40default,relation,onlineId,avatarUrl,plus,%40personalDetail,trophySummary&sort=onlineId&avatarSize=m&limit=32&offset={{offset}}&friendStatus={{friendStatus}}'
 		,trophyData: 	'https://{{region}}-tpy.np.community.playstation.net/trophy/v1/trophyTitles?fields=%40default&npLanguage={{lang}}&iconSize={{iconsize}}&platform=PS3%2CPSVITA%2CPS4&offset={{offset}}&limit={{limit}}&comparedUser={{id}}'	// NOTE: All server are in the US, the only change are market restrictions
 		,trophyDataList:'https://{{region}}-tpy.np.community.playstation.net/trophy/v1/trophyTitles/{{npCommunicationId}}/trophyGroups/{{groupId}}/trophies?fields=%40default,trophyRare,trophyEarnedRate&npLanguage={{lang}}'
 		,trophyGroupList:'https://{{region}}-tpy.np.community.playstation.net/trophy/v1/trophyTitles/{{npCommunicationId}}/trophyGroups/?npLanguage={{lang}}'
 		,trophyInfo:	'https://{{region}}-tpy.np.community.playstation.net/trophy/v1/trophyTitles/{{npCommunicationId}}/trophyGroups/{{groupId}}/trophies/{{trophyID}}?fields=%40default,trophyRare,trophyEarnedRate&npLanguage={{lang}}'
+		,verifyUser: 'https://vl.api.np.km.playstation.net/vl/api/v1/mobile/users/me/info'
 	}
 	,accessToken = ''
 	,refreshToken = ''
@@ -164,6 +169,7 @@ function getAccessToken(authCode, callback) {
 						}, (responseJSON.expires_in - 60) * 1000) // 59 minutes
 						debug('access_token/refresh_token obtained: ' + body);
 						if (typeof callback === "function") callback();
+						getUserInfo();
 					}
 					else {
 						debug('ERROR: ' + JSON.stringify(responseJSON))
@@ -174,6 +180,111 @@ function getAccessToken(authCode, callback) {
 				}
 		})	
 	}
+}
+/*
+* @desc 	Creates PUT request
+* @param 	String		url 		- The URL to ask data from
+* @param 	Function 	callback 	- Calls this function once the request is complete
+*/
+function psnPUTRequest (url, callback) {
+	var 
+		reqOptions = {
+			url: url
+			,method : 'PUT'
+			,headers: {
+				'Access-Control-Request-Method': 'PUT'
+				,'Origin': 'http://psapp.dl.playstation.net'
+				,'Access-Control-Request-Headers': 'Origin, Accept-Language, Authorization, Content-Type, Cache-Control'
+				,'Accept-Language': options.npLanguage +","+languages.join(',')
+				,'Authorization': 'Bearer ' + accessToken
+				,'Cache-Control': 'no-cache'
+				,'X-Requested-With': 'com.scee.psxandroid'
+				,'User-Agent': 'Mozilla/5.0 (Linux; U; Android 4.3; '+options.npLanguage+'; C6502 Build/10.4.1.B.0.101) AppleWebKit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30 PlayStation App/1.60.5/'+options.npLanguage+'/'+options.npLanguage
+			}
+		}
+	;
+	request.put(reqOptions, function(error, response, body) {
+		// Does not return json, unless it errors.
+		var responseJSON;
+		if(!error) {
+			if (response.statusCode == 200) {
+				callback(false, responseJSON) // Everything seems to be ok
+			}
+			else if(response.statusCode == 401) {
+				responseJSON = JSON.parse(body);
+				if ('error' in responseJSON) {
+					if (responseJSON.error.code === 2105858 || responseJSON.error.code === 2138626) {
+						debug('Token has expired, asking for new one');
+						initLogin(function() {
+							psnGETRequest(url, callback)	
+						});
+					}
+					else {
+						callback(true, responseJSON) // Return the error
+					}
+				}
+			}
+			else {
+				responseJSON = JSON.parse(body);
+				callback(true, responseJSON) // TODO: Handle non 200 errors
+			}
+		}
+		else {
+			callback(true, error) // Return the error
+		}
+	})
+}
+/*
+* @desc 	Creates DELETE request
+* @param 	String		url 		- The URL to ask data from
+* @param 	Function 	callback 	- Calls this function once the request is complete
+*/
+function psnDELETERequest (url, callback) {
+	var 
+		reqOptions = {
+			url: url
+			,method : 'DELETE'
+			,headers: {
+				'Access-Control-Request-Method': 'DELETE'
+				,'Origin': 'http://psapp.dl.playstation.net'
+				,'Access-Control-Request-Headers': 'Origin, Accept-Language, Authorization, Content-Type, Cache-Control'
+				,'Accept-Language': options.npLanguage +","+languages.join(',')
+				,'Authorization': 'Bearer ' + accessToken
+				,'Cache-Control': 'no-cache'
+				,'X-Requested-With': 'com.scee.psxandroid'
+				,'User-Agent': 'Mozilla/5.0 (Linux; U; Android 4.3; '+options.npLanguage+'; C6502 Build/10.4.1.B.0.101) AppleWebKit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30 PlayStation App/1.60.5/'+options.npLanguage+'/'+options.npLanguage
+			}
+		}
+	;
+	request.del(reqOptions, function(error, response, body) {
+		var responseJSON;
+		if(!error) {
+			if (response.statusCode == 200) {
+				callback(false, responseJSON) // Everything seems to be ok
+			}
+			else if(response.statusCode == 401) {
+				responseJSON = JSON.parse(body);
+				if ('error' in responseJSON) {
+					if (responseJSON.error.code === 2105858 || responseJSON.error.code === 2138626) {
+						debug('Token has expired, asking for new one');
+						initLogin(function() {
+							psnGETRequest(url, callback)	
+						});
+					}
+					else {
+						callback(true, responseJSON) // Return the error
+					}
+				}
+			}
+			else {
+				responseJSON = JSON.parse(body);
+				callback(true, responseJSON) // TODO: Handle non 200 errors
+			}
+		}
+		else {
+			callback(true, error) // Return the error
+		}
+	})
 }
 /*
 * @desc 	Creates GET request
@@ -329,6 +440,43 @@ exports.getProfile = function (psnid, callback) {
 	}
 }
 /*
+* @desc 	Add or remove a friend from the current PSN users friend list.
+* @param 	String 		friendId 	- The ID the user wishes to either add or remove
+* @param 	Bool 		addFriend   - If true, add the friend. If false, delete the friend.
+* @param 	Function 	callback 	- Calls this function once the request is complete
+*/
+exports.addRemoveFriend = function (friendId, addFriend, callback) {
+	
+	if(addFriend)
+	{
+		if (accessToken.length > 1) {
+		debug('Adding ' + friendId);
+		psnPUTRequest(psnURL.addRemoveFriend.replace("{{id}}", options.psnId).replace("{{friendId}}", friendId),callback);
+		
+		}
+		else {
+		debug('Asking for new token');
+		getAccessToken('',function() {
+		psnPUTRequest(psnURL.addRemoveFriend.replace("{{id}}", options.psnId).replace("{{friendId}}", friendId),callback);
+			})
+		}
+	}
+	else
+	{
+		if (accessToken.length > 1) {
+		debug('Removing ' + friendId + ' from the friend list of ' + options.psnId);
+		psnDELETERequest(psnURL.addRemoveFriend.replace("{{id}}", options.psnId).replace("{{friendId}}", friendId),callback);
+		
+		}
+		else {
+		debug('Asking for new token');
+		getAccessToken('',function() {
+		psnDELETERequest(psnURL.addRemoveFriend.replace("{{id}}", options.psnId).replace("{{friendId}}", friendId),callback);
+			})
+		}
+	}
+}
+/*
 * @desc 	Get the friends list for the given PSNID
 * @param 	String 		psnid 		- User's PSN ID
 * @param 	int 		offset 		- The offset value, used to get the users friend list at the starting index.
@@ -423,6 +571,36 @@ exports.getTrophy = function (psnid, npCommID, groupId, trophyID, callback) {
 		})
 	}
 }
+
+/*
+* @desc 	Gets the current PSN users information. Users do not need to call this.
+*/
+function getUserInfo () {
+	if (accessToken.length > 1) {
+		debug('Getting the current users PSN information...');
+		psnGETRequest(psnURL.verifyUser,saveUserInfo);
+	}
+	else {
+		debug('Asking for new token');
+		initLogin(function() {
+			psnGETRequest(psnURL.verifyUser,saveUserInfo);
+		})
+	}
+}
+
+/*
+* @desc 	Save the current PSN users information. Users do not need to call this.
+*/
+function saveUserInfo(error, responseJSON){
+	// TODO: Save the rest of the users settings returned.
+	debug(responseJSON.onlineId + ' is logged in.');
+	options.psnId = responseJSON.onlineId;
+	options.region = responseJSON.region;
+	options.npLanguage = responseJSON.language;
+	options.accountId = responseJSON.accountId;
+	options.mAccountId = responseJSON.mAccountId;
+}
+
 /*
 * @desc 	Use this to experiment new URL's and function from SONY's app
 * @param 	String url - The URL (with protocol/port/parameters)

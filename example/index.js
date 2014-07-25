@@ -83,6 +83,28 @@ app.get('/PSN/:id/friendList/:friendStatus/:offset', function(req, res){
 		}
 	})
 })
+// Adds or removed a friend from your PSN friend list.
+// "id" takes in the friend id.
+// "addRemove" is a bool value for either adding or removing the friend.
+app.get('/PSN/friendList/:id/:addRemove', function(req, res){ 
+	gumerPSN.addRemoveFriend(req.params.id, req.params.addRemove, function(error, addRemoveFriendData) {
+		if (!error) {
+			res.send(addRemoveFriendData)
+		}
+		else {
+			if (addRemoveFriendData.error.code == 2105356) {		// User not found code
+				res.send({
+					error: true, message: "PSN ID not found"
+				})
+			}
+			else {
+				res.send({
+					error: true, message: "Something went terribly wrong, submit an issue on GitHub please!", response: addRemoveFriendData
+				})
+			}
+		}
+	})
+})
 // Gets the ID owner's trophy (first 100) information and returns the JSON object.
 app.get('/PSN/:id/trophies', function(req, res){ 
 	gumerPSN.getTrophies(req.params.id, "m", 0, 100, function(error, trophyData) {
