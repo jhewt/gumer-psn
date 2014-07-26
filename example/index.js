@@ -198,6 +198,19 @@ app.get('/PSN/messages/getMessageGroups/:id', function(req, res){
 		}
 	})
 })
+// Get a messages content
+app.get('/PSN/messages/getMessageContent/:id/:messageUid/:contentKey', function(req, res){ 
+	gumerPSN.getMessageContent(req.params.id, req.params.messageUid, req.params.contentKey, function(error, messageContent) {
+		if (!error) {
+			res.send(messageContent)
+		}
+		else {
+				res.send({
+					error: true, message: "Something went terribly wrong, submit an issue on GitHub please!", response: messageContent
+				})
+		}
+	})
+})
 // Get a PSN users notification list
 app.get('/PSN/notifications/getNotifications', function(req, res){ 
 	gumerPSN.getNotifications(req.params.id, function(error, notificationData) {
