@@ -185,6 +185,19 @@ app.get('/PSN/twitch/getTwitchFeed', function(req, res){
 		}
 	})
 })
+// Get a PSN users message groups
+app.get('/PSN/messages/getMessageGroups/:id', function(req, res){ 
+	gumerPSN.getMessageGroup(req.params.id, function(error, messageGroupData) {
+		if (!error) {
+			res.send(messageGroupData)
+		}
+		else {
+				res.send({
+					error: true, message: "Something went terribly wrong, submit an issue on GitHub please!", response: messageGroupData
+				})
+		}
+	})
+})
 // Get a PSN users notification list
 app.get('/PSN/notifications/getNotifications', function(req, res){ 
 	gumerPSN.getNotifications(req.params.id, function(error, notificationData) {

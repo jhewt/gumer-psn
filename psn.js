@@ -61,6 +61,7 @@ var
 		,notificationsUrl: 'https://{{region}}-ntl.np.community.playstation.net/notificationList/v1/users/{{id}}/notifications?fields=@default%2Cmessage%2CactionUrl&npLanguage={{lang}}'
 		,friendData:    'https://{{region}}-prof.np.community.playstation.net/userProfile/v1/users/{{id}}/friendList?fields=%40default,relation,onlineId,avatarUrl,plus,%40personalDetail,trophySummary&sort=onlineId&avatarSize=m&limit=32&offset={{offset}}&friendStatus={{friendStatus}}'
 		,friendMe: 'https://friendme.sonyentertainmentnetwork.com/friendme/api/v1/c2s/users/me/friendrequest'
+		,messageGroup: 'https://{{region}}-gmsg.np.community.playstation.net/groupMessaging/v1/users/{{id}}/messageGroups?fields=@default%2CmessageGroupId%2CmessageGroupDetail%2CtotalUnseenMessages%2CtotalMessages%2ClatestMessage&npLanguage=' + options.npLanguage
 		,trophyData: 	'https://{{region}}-tpy.np.community.playstation.net/trophy/v1/trophyTitles?fields=%40default&npLanguage={{lang}}&iconSize={{iconsize}}&platform=PS3%2CPSVITA%2CPS4&offset={{offset}}&limit={{limit}}&comparedUser={{id}}'	// NOTE: All server are in the US, the only change are market restrictions
 		,trophyDataList:'https://{{region}}-tpy.np.community.playstation.net/trophy/v1/trophyTitles/{{npCommunicationId}}/trophyGroups/{{groupId}}/trophies?fields=%40default,trophyRare,trophyEarnedRate&npLanguage={{lang}}'
 		,trophyGroupList:'https://{{region}}-tpy.np.community.playstation.net/trophy/v1/trophyTitles/{{npCommunicationId}}/trophyGroups/?npLanguage={{lang}}'
@@ -454,6 +455,23 @@ exports.getProfile = function (psnid, callback) {
 		debug('Asking for new token');
 		getAccessToken('',function() {
 			psnGETRequest(psnURL.profileData.replace("{{id}}", psnid),callback);
+		})
+	}
+}
+/*
+* @desc 	Get the message group for the given PSN id.
+* @param 	String 		psnid 		- User's PSN ID
+* @param 	Function 	callback 	- Calls this function once the request is complete
+*/
+exports.getMessageGroup = function (psnid, callback) {
+	if (accessToken.length > 1) {
+		debug('Get the message group for: ' + psnid);
+		psnGETRequest(psnURL.messageGroup.replace("{{id}}", psnid),callback);
+	}
+	else {
+		debug('Asking for new token');
+		getAccessToken('',function() {
+			psnGETRequest(psnURL.messageGroup.replace("{{id}}", psnid),callback);
 		})
 	}
 }
