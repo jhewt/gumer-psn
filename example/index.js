@@ -144,6 +144,19 @@ app.get('/PSN/recentActivity/:id/:newsFeed/:pageNumber', function(req, res){
 		}
 	})
 })
+// Like or dislike a recent activity item
+app.get('/PSN/likeDislikeRecentItem/:feedId/:isLiked', function(req, res){ 
+	gumerPSN.likeRecentActivityItem(req.params.feedId, req.params.isLiked, function(error, recentActivityData) {
+		if (!error) {
+			res.send(recentActivityData)
+		}
+		else {
+				res.send({
+					error: true, message: "Something went terribly wrong, submit an issue on GitHub please!", response: recentActivityData
+				})
+		}
+	})
+})
 // Get a PSN users notification list
 app.get('/PSN/notifications/getNotifications', function(req, res){ 
 	gumerPSN.getNotifications(req.params.id, function(error, notificationData) {

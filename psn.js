@@ -52,12 +52,15 @@ var
 		,profileData: 	'https://{{region}}-prof.np.community.playstation.net/userProfile/v1/users/{{id}}/profile?fields=%40default,relation,requestMessageFlag,presence,%40personalDetail,trophySummary'
 		,addRemoveFriend: 'https://{{region}}-prof.np.community.playstation.net/userProfile/v1/users/{{id}}/friendList/{{friendId}}'
 		,sendFriendRequest: 'https://{{region}}-prof.np.community.playstation.net/userProfile/v1/users/{{id}}/friendList/{{friendId}}?requestMessage={{requestMessage}}'
+		,notificationsUrl: 'https://{{region}}-ntl.np.community.playstation.net/notificationList/v1/users/{{id}}/notifications?fields=@default%2Cmessage%2CactionUrl&npLanguage={{lang}}'
 		,friendData:    'https://{{region}}-prof.np.community.playstation.net/userProfile/v1/users/{{id}}/friendList?fields=%40default,relation,onlineId,avatarUrl,plus,%40personalDetail,trophySummary&sort=onlineId&avatarSize=m&limit=32&offset={{offset}}&friendStatus={{friendStatus}}'
 		,friendMe: 'https://friendme.sonyentertainmentnetwork.com/friendme/api/v1/c2s/users/me/friendrequest'
 		,trophyData: 	'https://{{region}}-tpy.np.community.playstation.net/trophy/v1/trophyTitles?fields=%40default&npLanguage={{lang}}&iconSize={{iconsize}}&platform=PS3%2CPSVITA%2CPS4&offset={{offset}}&limit={{limit}}&comparedUser={{id}}'	// NOTE: All server are in the US, the only change are market restrictions
 		,trophyDataList:'https://{{region}}-tpy.np.community.playstation.net/trophy/v1/trophyTitles/{{npCommunicationId}}/trophyGroups/{{groupId}}/trophies?fields=%40default,trophyRare,trophyEarnedRate&npLanguage={{lang}}'
 		,trophyGroupList:'https://{{region}}-tpy.np.community.playstation.net/trophy/v1/trophyTitles/{{npCommunicationId}}/trophyGroups/?npLanguage={{lang}}'
 		,trophyInfo:	'https://{{region}}-tpy.np.community.playstation.net/trophy/v1/trophyTitles/{{npCommunicationId}}/trophyGroups/{{groupId}}/trophies/{{trophyID}}?fields=%40default,trophyRare,trophyEarnedRate&npLanguage={{lang}}'
+		,recentActivityFeed: 'https://activity.api.np.km.playstation.net/activity/api/v1/users/{{id}}/{{newsFeed}}/{{pageNumber}}?filters=PURCHASED&filters=RATED&filters=VIDEO_UPLOAD&filters=SCREENSHOT_UPLOAD&filters=PLAYED_GAME&filters=STORE_PROMO&filters=WATCHED_VIDEO&filters=TROPHY&filters=BROADCASTING&filters=LIKED&filters=PROFILE_PIC&filters=FRIENDED&filters=CONTENT_SHARE'
+		,recentActivityLikeItem: 'https://activity.api.np.km.playstation.net/activity/api/v1/users/{{id}}/set/{{likeDislike}}/story/{{feedId}}'
 		,verifyUser: 'https://vl.api.np.km.playstation.net/vl/api/v1/mobile/users/me/info'
 	}
 	,accessToken = ''
@@ -370,8 +373,7 @@ function psnPOSTRequest (url, content, callback) {
 		if(!error) {
 			debug(response.statusCode);
 			// 204: "no-content", does not return json.
-			if (response.statusCode == 200 || response.statusCode == 204) {
-				debug('Friend request sent');
+			if (response.statusCode == 200 || response.statusCode == 201 || response.statusCode == 204) {
 				callback(false, responseJSON) // Everything seems to be ok
 			}
 			else if(response.statusCode == 401) {
@@ -457,13 +459,31 @@ exports.getProfile = function (psnid, callback) {
 */
 exports.getRecentActivity = function (psnid, newsFeed, pageNumber, callback) {
 	if (accessToken.length > 1) {
-		debug('Getting recent activity feed for ' + options.psnId);
-		psnGETRequest(psnURL.recentActivityFeed.replace("{{id}}", options.psnId).replace("{{newsFeed}}", newsFeed).replace("{{pageNumber}}", pageNumber),callback);
+		debug('Getting recent activity feed for ' + psnid);
+		psnGETRequest(psnURL.recentActivityFeed.replace("{{id}}", psnid).replace("{{newsFeed}}", newsFeed).replace("{{pageNumber}}", pageNumber),callback);
 	}
 	else {
 		debug('Asking for new token');
 		getAccessToken('',function() {
-			psnGETRequest(psnURL.recentActivityFeed.replace("{{id}}", options.psnId).replace("{{newsFeed}}", newsFeed).replace("{{pageNumber}}", pageNumber),callback);
+			psnGETRequest(psnURL.recentActivityFeed.replace("{{id}}", psnid).replace("{{newsFeed}}", newsFeed).replace("{{pageNumber}}", pageNumber),callback);
+		})
+	}
+}
+/*.
+* @desc 	Like or dislike a recent activity item
+* @param 	String 		feedId 			- The recent activity feed id.
+* @param 	String 		isLiked 		- Set with "like" or "dislike".
+* @param 	Function 	callback 		- Calls this function once the request is complete
+*/
+exports.likeRecentActivityItem = function (feedId, isLiked, callback) {
+	if (accessToken.length > 1) {
+		debug(isLiked + ' recent activity item ' + feedId);
+		psnPOSTRequest(psnURL.recentActivityLikeItem.replace("{{id}}", options.psnId).replace("{{feedId}}", feedId).replace("{{likeDislike}}", isLiked), null, callback);
+	}
+	else {
+		debug('Asking for new token');
+		getAccessToken('',function() {
+			psnPOSTRequest(psnURL.recentActivityLikeItem.replace("{{id}}", options.psnId).replace("{{feedId}}", feedId).replace("{{likeDislike}}", isLiked), null, callback);
 		})
 	}
 }
@@ -482,7 +502,8 @@ exports.getNotifications = function (psnid, callback) {
 		getAccessToken('',function() {
 			psnGETRequest(psnURL.notificationsUrl.replace("{{id}}", options.psnId).replace("{{lang}}", options.npLanguage),callback);
 		})
-
+	}
+}
 /*
 * @desc 	Add or remove a friend from the current PSN users friend list.
 * @param 	String 		friendId 	- The ID the user wishes to either add or remove
