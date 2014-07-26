@@ -157,6 +157,20 @@ app.get('/PSN/likeDislikeRecentItem/:feedId/:isLiked', function(req, res){
 		}
 	})
 })
+// Get nico video live feed.
+// For the example, we are using the hard coded value sony uses in their own app. You can override them though.
+app.get('/PSN/nicovideo/getNicoNicoFeed', function(req, res){ 
+	gumerPSN.getNicoNicoFeed("onair", "PS4", 0, 80, "view",  function(error, nicoData) {
+		if (!error) {
+			res.send(nicoData)
+		}
+		else {
+				res.send({
+					error: true, message: "Something went terribly wrong, submit an issue on GitHub please!", response: nicoData
+				})
+		}
+	})
+})
 // Get a PSN users notification list
 app.get('/PSN/notifications/getNotifications', function(req, res){ 
 	gumerPSN.getNotifications(req.params.id, function(error, notificationData) {

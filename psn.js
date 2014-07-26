@@ -43,6 +43,12 @@ var
 		,cltm: 			'1399637146935'
 		,service_entity: 'urn:service-entity:psn'
 	}
+	,livestreamURL = {
+		nicoNicoLiveUrl:'http://edn.live.nicovideo.jp/api/v1.0/programs?offset={{offset}}&limit={{limit}}&status={{status}}&sce_platform={{platform}}&sort={{sort}}'
+		,ustreamUrl: 'https://ps4api.ustream.tv/media.json?'
+		,twitchUrl: 'https://api.twitch.tv/api/orbis/streams?offset={{offset}}&limit={{limit}}&query={{query}}&'
+		,twitchPlatformHeader: '54bd6377db3b48cba9ecc44bff5a410b'
+	}
 
 	// URL Vars used for login to PSN and pulling information
 	,psnURL = {
@@ -501,6 +507,27 @@ exports.getNotifications = function (psnid, callback) {
 		debug('Asking for new token');
 		getAccessToken('',function() {
 			psnGETRequest(psnURL.notificationsUrl.replace("{{id}}", options.psnId).replace("{{lang}}", options.npLanguage),callback);
+		})
+	}
+}
+/*
+* @desc 	Get Nico Nico video feed
+* @param 	String 		status 		- The status of the feed.
+* @param 	String 		platform 	- The selected platform.
+* @param 	String 		offset 		- The offset of the list (Sony hardcodes this value at 0, but we can keep the offset going)
+* @param 	String 		limit 		- The limit of results. (Sony hardcodes this at 80)
+* @param 	String 		sort 		- Hardcoded to "view"
+* @param 	Function 	callback 	- Calls this function once the request is complete
+*/
+exports.getNicoNicoFeed = function (status, platform, offset, limit, sort, callback) {
+	if (accessToken.length > 1) {
+		debug('Getting nicoVideo feed');
+		psnGETRequest(livestreamURL.nicoNicoLiveUrl.replace("{{status}}", status).replace("{{platform}}", platform).replace("{{offset}}", offset).replace("{{limit}}", limit).replace("{{sort}}", sort),callback);
+	}
+	else {
+		debug('Asking for new token');
+		getAccessToken('',function() {
+	psnGETRequest(livestreamURL.nicoNicoLiveUrl.replace("{{status}}", status).replace("{{platform}}", platform).replace("{{offset}}", offset).replace("{{limit}}", limit).replace("{{sort}}", sort),callback);
 		})
 	}
 }
