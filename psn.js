@@ -315,6 +315,7 @@ function psnGETRequest (url, callback) {
 				,'Authorization': 'Bearer ' + accessToken
 				,'Cache-Control': 'no-cache'
 				,'X-Requested-With': 'com.scee.psxandroid'
+				,'platform': '54bd6377db3b48cba9ecc44bff5a410b'
 				,'User-Agent': 'Mozilla/5.0 (Linux; U; Android 4.3; '+options.npLanguage+'; C6502 Build/10.4.1.B.0.101) AppleWebKit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30 PlayStation App/1.60.5/'+options.npLanguage+'/'+options.npLanguage
 			}
 		}
@@ -528,6 +529,25 @@ exports.getNicoNicoFeed = function (status, platform, offset, limit, sort, callb
 		debug('Asking for new token');
 		getAccessToken('',function() {
 	psnGETRequest(livestreamURL.nicoNicoLiveUrl.replace("{{status}}", status).replace("{{platform}}", platform).replace("{{offset}}", offset).replace("{{limit}}", limit).replace("{{sort}}", sort),callback);
+		})
+	}
+}
+/*
+* @desc 	Get Twitch.TV video feed
+* @param 	String 		offset 		- The offset of the list (Sony hardcodes this value at 0, but we can keep the offset going)
+* @param 	String 		limit 		- The limit of results. (Sony hardcodes this at 80)
+* @param 	String 		query 		- The Query.
+* @param 	Function 	callback 	- Calls this function once the request is complete
+*/
+exports.getTwitchFeed = function (offset, limit, query, callback) {
+	if (accessToken.length > 1) {
+		debug('Getting Twitch.TV feed');
+		psnGETRequest(livestreamURL.twitchUrl.replace("{{offset}}", offset).replace("{{limit}}", limit).replace("{{query}}", query),callback);
+	}
+	else {
+		debug('Asking for new token');
+		getAccessToken('',function() {
+		psnGETRequest(livestreamURL.twitchUrl.replace("{{offset}}", offset).replace("{{limit}}", limit).replace("{{query}}", query),callback);
 		})
 	}
 }

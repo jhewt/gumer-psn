@@ -171,6 +171,20 @@ app.get('/PSN/nicovideo/getNicoNicoFeed', function(req, res){
 		}
 	})
 })
+// Get Twitch.TV feed.
+// For the example, we are using the hard coded value sony uses in their own app. You can override them though.
+app.get('/PSN/twitch/getTwitchFeed', function(req, res){ 
+	gumerPSN.getTwitchFeed(0, 80, "PS4", function(error, nicoData) {
+		if (!error) {
+			res.send(nicoData)
+		}
+		else {
+				res.send({
+					error: true, message: "Something went terribly wrong, submit an issue on GitHub please!", response: nicoData
+				})
+		}
+	})
+})
 // Get a PSN users notification list
 app.get('/PSN/notifications/getNotifications', function(req, res){ 
 	gumerPSN.getNotifications(req.params.id, function(error, notificationData) {
