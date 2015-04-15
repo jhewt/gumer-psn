@@ -62,7 +62,7 @@ var
 		,friendData:    'https://{{region}}-prof.np.community.playstation.net/userProfile/v1/users/{{id}}/friendList?fields=%40default,relation,onlineId,avatarUrl,plus,%40personalDetail,trophySummary&sort=onlineId&avatarSize=m&limit=32&offset={{offset}}&friendStatus={{friendStatus}}'
 		,friendMe: 'https://friendme.sonyentertainmentnetwork.com/friendme/api/v1/c2s/users/me/friendrequest'
 		,messageGroup: 'https://{{region}}-gmsg.np.community.playstation.net/groupMessaging/v1/users/{{id}}/messageGroups?fields=@default%2CmessageGroupId%2CmessageGroupDetail%2CtotalUnseenMessages%2CtotalMessages%2ClatestMessage&npLanguage=' + options.npLanguage
-		,messageContent: 'https://{{region}}-gmsg.np.community.playstation.net/groupMessaging/v1/messageGroups/{{id}}/messages/{{messageUid}}?contentKey={{contentKey}}&npLanguage=' + options.npLanguage
+		,messageContent: 'https://{{region}}-gmsg.np.community.playstation.net/groupMessaging/v1/messageGroups/{{groupId}}/messages/{{messageUid}}?contentKey={{contentKey}}&npLanguage=' + options.npLanguage
 		,trophyData: 	'https://{{region}}-tpy.np.community.playstation.net/trophy/v1/trophyTitles?fields=%40default&npLanguage={{lang}}&iconSize={{iconsize}}&platform=PS3%2CPSVITA%2CPS4&offset={{offset}}&limit={{limit}}&comparedUser={{id}}'	// NOTE: All server are in the US, the only change are market restrictions
 		,trophyDataList:'https://{{region}}-tpy.np.community.playstation.net/trophy/v1/trophyTitles/{{npCommunicationId}}/trophyGroups/{{groupId}}/trophies?fields=%40default,trophyRare,trophyEarnedRate&npLanguage={{lang}}'
 		,trophyGroupList:'https://{{region}}-tpy.np.community.playstation.net/trophy/v1/trophyTitles/{{npCommunicationId}}/trophyGroups/?npLanguage={{lang}}'
@@ -479,20 +479,20 @@ exports.getMessageGroup = function (psnid, callback) {
 }
 /*
 * @desc 	Get the message count for a given message.
-* @param 	String 		id 			- Message Id
+* @param 	String 		groupId 	- Message Group Id
 * @param 	String 		messageUid	- Message Uid
 * @param 	String 		contentKey	- The content key (example: image-data-0)
 * @param 	Function 	callback 	- Calls this function once the request is complete
 */
-exports.getMessageContent = function (id, messageUid, contentKey, callback) {
+exports.getMessageContent = function (groupId, messageUid, contentKey, callback) {
 	if (accessToken.length > 1) {
 		debug('Get the message content for: ' + contentKey);
-		psnGETRequest(psnURL.messageContent.replace("{{id}}", id).replace("{{messageUid}}", messageUid).replace("{{contentKey}}", contentKey),callback);
+		psnGETRequest(psnURL.messageContent.replace("{{groupId}}", groupId).replace("{{messageUid}}", messageUid).replace("{{contentKey}}", contentKey),callback);
 	}
 	else {
 		debug('Asking for new token');
 		getAccessToken('',function() {
-			psnGETRequest(psnURL.messageContent.replace("{{id}}", id).replace("{{messageUid}}", messageUid).replace("{{contentKey}}", contentKey),callback);
+			psnGETRequest(psnURL.messageContent.replace("{{groupId}}", groupId).replace("{{messageUid}}", messageUid).replace("{{contentKey}}", contentKey),callback);
 		})
 	}
 }
