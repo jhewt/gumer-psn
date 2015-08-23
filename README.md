@@ -3,11 +3,7 @@ gumer-psn
 
 A Playstation Network API written in Node.js
 
-**v0.1.2**
-
-Another languages:
-
-PHP: https://github.com/ilendemli/gumer-psn-php by @ilendemli
+**v0.2.0**
 
 ##About
 This script uses the method found in Sony's official Android application that sends JSON in every response and NOT xml.
@@ -32,8 +28,7 @@ For now this script can get:
 
 ##Requirements
 * A valid PSN account *(can be new)*
-* Node.js >= 0.8.x
-* JavaScript knowledge, lol
+* Node.js / io.js
 
 ##Known Limitations
 * It doesn't display **hidden trophies** *this is a server-side restriction*. If you do have another way to get them please share it.
@@ -302,10 +297,9 @@ Output:
 
 Contribute
 =========
-Contribute by cloning the repository and start making changes to make it better and better, other API has failed because of being very "Copyrighted" and closed source. This is different, I'm also planning on making a site using PSN profiles but I want everyone to join in order to make the perfect PSN API possible and FREE.
+Contribute by cloning the repository and start making changes to make it better, other API has failed because of being very "Copyrighted" and closed source. This is different, I'm also planning on making a site using PSN profiles but I want everyone to join in order to make the perfect PSN API possible and FREE.
 
-NOTE: I do not own any PlayStation system, all this comes from checking the activity within my Android Device. So, I can not test social/ps4 related features such as Streaming, voice messages or archive messages. 
-Those features are within PSN's app but I will not be able to see/test how is being received from those devices (PSVITA,PS3 or PS4), feel free to support the cause by donating so I can buy an used PS3/PS4, maybe?
+NOTE: I do not own any PlayStation system, I only play PC games (PC MASTER RACE!). All this comes from checking the network activity within my Android Device and reading Mali code (decompiling their .apk).
 
 If you want to make a donation, feel free to do it to my paypal account: jose_sachs@hotmail.com.
-It helps me to mantain this project, and a coffe while coding isn't bad hehe.
+It helps me to mantain this project, and a coffe while coding isn't bad.

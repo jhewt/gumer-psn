@@ -1,7 +1,7 @@
 {
 	"name": "gumer-psn",
 	"description": "A Playstation Network API",
-	"version": "0.1.2",
+	"version": "0.2.0",
 	"author": {
 		"name": "José Augusto Sächs",
 		"email": "admin@jsachs.net"
@@ -13,7 +13,8 @@
 		}
 	],
 	"dependencies": {
-		"request": "2.x.x"
+		"request": "2.x.x",
+		"cheerio": "0.19.0"
 	},
 	"repository": {
 		"type": "git",

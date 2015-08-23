@@ -1,10 +1,10 @@
 /*!
 *
-* Gumer Playstation Network API
-* v0.1.2
+* Playstation Network API
+* v0.2.0
 * ---
 * @desc 	This pulls information from SONY's PSN servers
-* @author 	José A. Sächs (admin@jsachs.net / admin@smartpixel.com.ar / jose@animus.com.ar)
+* @author 	José A. Sachs (admin@jsachs.net / jose@animus.com.ar)
 *
 */
 
@@ -23,6 +23,7 @@ var
 	,regions		= ["us","ca","mx","cl","pe","ar","co","br","gb","ie","be","lu","nl","fr","de","at","ch","it","pt","dk","fi","no","se","au","nz","es","ru","ae","za","pl","gr","sa","cz","bg","hr","ro","si","hu","sk","tr","bh","kw","lb","om","qa","il","mt","is","cy","in","ua","hk","tw","sg","my","id","th","jp","kr"] // Know SONY's servers
 	,languages		= ["ja","en","en-GB","fr","es","es-MX","de","it","nl","pt","pt-BR","ru","pl","fi","da","no","sv","tr","ko","zh-CN","zh-TW"] // All languages SONY accepts as parameter
 	,request 		= require('request').defaults({jar: true}) // We set jar to true to enable cookie saving (Only used for the login process)
+	,cheerio		= require('cheerio') // Now required to extract the value of the input "brandingParams"
 	,debug 			= function (message) {
 		if (options.debug) console.log('gPSN | ' + message);
 	}
@@ -32,18 +33,19 @@ var
 		,redirectURL_oauth: 'com.scee.psxandroid.scecompcall://redirect'	// Android Callback URL
 		,client_id: 	'b0d0d7ad-bb99-4ab1-b25e-afa0c76577b0' 				// Client ID
 		,scope: 		'sceapp' 				// SEN Scope
-		,scope_psn: 	'psn:sceapp' 			// PSN Scope
+		,scope_psn: 	'psn:sceapp,user:account.get,user:account.settings.privacy.get,user:account.settings.privacy.update,user:account.realName.get,user:account.realName.update,kamaji:get_account_hash'	// PSN Scope, now edited with more scopes
 		,csrfToken: 	''						// csrf Token
 		,authCode : 	''						// authCode needed to ask for an access token
 		,client_secret: 'Zo4y8eGIa3oazIEp' 		// Secret string, this is most likely to change overtime. If it changes, please contribute to this project.
 		,duid: 			'00000005006401283335353338373035333434333134313a433635303220202020202020202020202020202020' 	// I still don't know what "duid" stands for... if you do, create an issue about it please!
-		,cltm: 			'1399637146935'
-		,service_entity: 'urn:service-entity:psn'
+		,state: 		'1156936032'
+		,service_entity:'urn:service-entity:psn'
+		,paramString: 	'c2VydmljZV9lbnRpdHk9cHNuJnJlcXVlc3RfdGhlbWU9bGlxdWlk' // This is extracted from the login page, however it's always the same. "service_entity=psn&request_theme=liquid" in Base64 but we extract it if it changes
 	}
 
 	// URL Vars used for login to PSN and pulling information
 	,psnURL = {
-		SignIN:  		psnVars.SENBaseURL + '/2.0/oauth/authorize?response_type=code&service_entity='+psnVars.service_entity+'&returnAuthCode=true&cltm='+psnVars.cltm+'&redirect_uri='+psnVars.redirectURL_oauth+'&client_id='+psnVars.client_id+'&scope='+psnVars.scope_psn // New SEN login page (no csrfToken this time)
+		SignIN:  		psnVars.SENBaseURL + '/2.0/oauth/authorize?response_type=code&service_entity='+psnVars.service_entity+'&returnAuthCode=true&state='+psnVars.state+'&redirect_uri='+psnVars.redirectURL_oauth+'&client_id='+psnVars.client_id+'&scope='+psnVars.scope_psn // New SEN login page (no csrfToken this time)
 		,SignINPOST: 	psnVars.SENBaseURL + '/login.do'		// POST DATA for login must be sended here
 		,oauth: 		'https://auth.api.sonyentertainmentnetwork.com/2.0/oauth/token' 	// PSN's OAuth implementation Uri
 		,profileData: 	'https://{{region}}-prof.np.community.playstation.net/userProfile/v1/users/{{id}}/profile?fields=%40default,relation,requestMessageFlag,presence,%40personalDetail,trophySummary'
@@ -52,9 +54,12 @@ var
 		,trophyGroupList:'https://{{region}}-tpy.np.community.playstation.net/trophy/v1/trophyTitles/{{npCommunicationId}}/trophyGroups/?npLanguage={{lang}}'
 		,trophyInfo:	'https://{{region}}-tpy.np.community.playstation.net/trophy/v1/trophyTitles/{{npCommunicationId}}/trophyGroups/{{groupId}}/trophies/{{trophyID}}?fields=%40default,trophyRare,trophyEarnedRate&npLanguage={{lang}}'
 	}
+	,userAgent = 'Mozilla/5.0 (Linux; U; Android 4.3; '+options.npLanguage+'; C6502 Build/10.4.1.B.0.101) AppleWebKit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30 PlayStation App/2.55.8/'+options.npLanguage+'/'+options.npLanguage
+	,requestedWith = 'com.scee.psxandroid'
 	,accessToken = ''
 	,refreshToken = ''
 	,refreshInterval
+	,codeRegex = /redirect\?code=(.{6})/
 ;
 /*
 * @desc 	Gets/refresh the CSRF token // Issue #3
@@ -65,41 +70,70 @@ function initLogin(callback) {
 	request.get({ 
 			url: psnURL.SignIN
 			, headers : {
-				'User-Agent': 'Mozilla/5.0 (Linux; U; Android 4.3; '+options.npLanguage+'; C6502 Build/10.4.1.B.0.101) AppleWebKit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30 PlayStation App/1.60.5/'+options.npLanguage+'/'+options.npLanguage
+				'User-Agent': userAgent
+				,'X-Requested-With': requestedWith
 			}
 		}
 		, function (error, response, body) {
-			(typeof callback === "function" ? getLogin(callback, psnVars.SENBaseURL + response.req.path) : getLogin(undefined, psnVars.SENBaseURL + response.req.path));
+			//console.log(error);
+			if (body) {
+				var $ = cheerio.load(body);
+				var new_paramString = $('#brandingParams').attr("value");
+				getLogin(callback, psnURL.SignIN)
+			}
+			else {
+				debug('ERROR: ' + error)
+			}
 	})
 }
 /*
 * @desc 	Login into PSN/SEN and creates a session with an auth code
 * @param 	Function callback - Calls this function once the login is complete
 */
-function getLogin(callback, url) {
+function getLogin(callback, referer, params) {
+	debug('Logging in, sending POST');
 	request.post(psnURL.SignINPOST
 		,{
 			headers: {
-				'Origin':'https://auth.api.sonyentertainmentnetwork.com'
-				,'Referer': url
+				'User-Agent': userAgent
+				,'X-Requested-With': requestedWith
+				,'Origin':'https://auth.api.sonyentertainmentnetwork.com'
+				,'Referer': referer
 			}
 			,form:{
-				'params' 		: 'service_entity=psn'
+				'params' 		: (params !== psnVars.paramString ? params : psnVars.paramString) // Now it's base64'd for some reason.
 				,'j_username'	: options.email
 				,'j_password'	: options.password
 			}
 		}, function (error, response, body) {
-			request.get(response.headers.location, function (error, response, body) {
-				if (!error) {
-					var urlString = unescape(response.req.path);
-					psnVars.authCode = urlString.substr(urlString.indexOf("authCode=") + 9, 6);
-					debug('authCode obtained: ' + psnVars.authCode);
-					getAccessToken(psnVars.authCode, callback);	
-				}
-				else {
-					debug('ERROR: ' + error)
-				}
-			})
+			if (!error) {
+				followRedirect(null, response.headers.location, referer);
+			}
+			else {
+				debug('ERROR: ' + error)
+			}
+		}
+	)
+}
+function followRedirect(callback, url, referer) {
+	debug('Logged in, following redirects');
+	request.get(url
+		,{
+			headers: {
+				'User-Agent': userAgent
+				,'X-Requested-With': requestedWith
+				,'Origin':'https://auth.api.sonyentertainmentnetwork.com'
+				,'Referer': referer
+			},
+			followRedirect: false
+		}, function (error, response, body) {
+			if (!error) {
+				var codeResult = codeRegex.exec(unescape(response.headers.location));
+				getAccessToken(codeResult[1])
+			}
+			else {
+				debug('ERROR: ' + error)
+			}
 		}
 	)
 }
@@ -109,6 +143,7 @@ function getLogin(callback, url) {
 * @param 	Function 	callback - Calls this function once the request is complete
 */
 function getAccessToken(authCode, callback) {
+	debug('Getting access token');
 	var responseJSON;
 	if (refreshToken.length > 0) {
 		request.post(psnURL.oauth, {form:{ // Refreshing the token with refresh_token to avoid login again
@@ -191,8 +226,8 @@ function psnGETRequest (url, callback) {
 				,'Accept-Language': options.npLanguage +","+languages.join(',')
 				,'Authorization': 'Bearer ' + accessToken
 				,'Cache-Control': 'no-cache'
-				,'X-Requested-With': 'com.scee.psxandroid'
-				,'User-Agent': 'Mozilla/5.0 (Linux; U; Android 4.3; '+options.npLanguage+'; C6502 Build/10.4.1.B.0.101) AppleWebKit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30 PlayStation App/1.60.5/'+options.npLanguage+'/'+options.npLanguage
+				,'X-Requested-With': requestedWith
+				,'User-Agent': userAgent
 			}
 		}
 	;
@@ -242,8 +277,8 @@ function psnPOSTRequest (url, callback) {
 				,'Accept-Language': options.npLanguage +","+languages.join(',')
 				,'Authorization': 'Bearer ' + accessToken
 				,'Cache-Control': 'no-cache'
-				,'X-Requested-With': 'com.scee.psxandroid'
-				,'User-Agent': 'Mozilla/5.0 (Linux; U; Android 4.3; '+options.npLanguage+'; C6502 Build/10.4.1.B.0.101) AppleWebKit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30 PlayStation App/1.60.5/'+options.npLanguage+'/'+options.npLanguage
+				,'X-Requested-With': requestedWith
+				,'User-Agent': userAgent
 			}
 		}
 	;

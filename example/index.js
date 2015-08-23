@@ -1,10 +1,10 @@
 /*!
 *
-* Gumer Playstation Network API
-* v0.1.2
+* Playstation Network API
+* v0.2.0
 * ---
 * @desc 	A simple example of usage using Express, it returns the Raw object from Sony' servers
-* @author 	José A. Sächs (admin@jsachs.net / admin@smartpixel.com.ar / jose@animus.com.ar)
+* @author 	José A. Sachs (admin@jsachs.net jose@animus.com.ar)
 *
 */
 
@@ -19,8 +19,8 @@ console.log('Starting gPSN');
 
 gumerPSN.init({		// Our PSN Module, we have to start it once. - irkinsander
 	debug:		true				// Let's set it true, it's still in early development. So, report everything that goes wrong please.
-	,email:		"{{username}}"		// A valid PSN/SCE account (can be new one) // TODO: Using the user's credentials to do this.
-	,password:	"{{password}}"		// Account's password, du'h
+	,email:		"{{CHANGE ME}}"		// A valid PSN/SCE account (can be new one) // TODO: Using the user's credentials to do this.
+	,password:	"{{CHANGE ME}}"		// Account's password
 	,npLanguage:	"en"			// The language the trophy's name and description will shown as
 	,region: 		"us"			// The server region that will push data
 });
