@@ -13,15 +13,15 @@
 var
 	// Vars
 	options = { // Default configuration
-		debug: 		false
+		      debug: false
 		// @TODO: Using user's account to login and use (it can be used in the browser meaning less server requests)
-		,email: 	''
-		,password: 	''
-		,region: 	'us'
-		,npLanguage : 'en'
+		     ,email: ''
+		  ,password: ''
+		    ,region: 'us'
+		,npLanguage: 'en'
 	}
 	,regions		= ["us","ca","mx","cl","pe","ar","co","br","gb","ie","be","lu","nl","fr","de","at","ch","it","pt","dk","fi","no","se","au","nz","es","ru","ae","za","pl","gr","sa","cz","bg","hr","ro","si","hu","sk","tr","bh","kw","lb","om","qa","il","mt","is","cy","in","ua","hk","tw","sg","my","id","th","jp","kr"] // Know SONY's servers
-	,languages		= ["ja","en","en-GB","fr","es","es-MX","de","it","nl","pt","pt-BR","ru","pl","fi","da","no","sv","tr","ko","zh-CN","zh-TW"] // All languages SONY accepts as parameter
+	,languages	= ["ja","en","en-GB","fr","es","es-MX","de","it","nl","pt","pt-BR","ru","pl","fi","da","no","sv","tr","ko","zh-CN","zh-TW"] // All languages SONY accepts as parameter
 	,request 		= require('request').defaults({jar: true}) // We set jar to true to enable cookie saving (Only used for the login process)
 	,cheerio		= require('cheerio') // Now required to extract the value of the input "brandingParams"
 	,debug 			= function (message) {
@@ -29,37 +29,38 @@ var
 	}
 	// Vars required to perform REQUESTS to Sony' servers
 	,psnVars = {
-		SENBaseURL: 	'https://auth.api.sonyentertainmentnetwork.com'
+		        SENBaseURL: 'https://auth.api.sonyentertainmentnetwork.com'
 		,redirectURL_oauth: 'com.scee.psxandroid.scecompcall://redirect'	// Android Callback URL
-		,client_id: 	'b0d0d7ad-bb99-4ab1-b25e-afa0c76577b0' 				// Client ID
-		,scope: 		'sceapp' 				// SEN Scope
-		,scope_psn: 	'psn:sceapp,user:account.get,user:account.settings.privacy.get,user:account.settings.privacy.update,user:account.realName.get,user:account.realName.update,kamaji:get_account_hash'	// PSN Scope, now edited with more scopes
-		,csrfToken: 	''						// csrf Token
-		,authCode : 	''						// authCode needed to ask for an access token
-		,client_secret: 'Zo4y8eGIa3oazIEp' 		// Secret string, this is most likely to change overtime. If it changes, please contribute to this project.
-		,duid: 			'00000005006401283335353338373035333434333134313a433635303220202020202020202020202020202020' 	// I still don't know what "duid" stands for... if you do, create an issue about it please!
-		,state: 		'1156936032'
-		,service_entity:'urn:service-entity:psn'
-		,paramString: 	'c2VydmljZV9lbnRpdHk9cHNuJnJlcXVlc3RfdGhlbWU9bGlxdWlk' // This is extracted from the login page, however it's always the same. "service_entity=psn&request_theme=liquid" in Base64 but we extract it if it changes
+		        ,client_id: 'b0d0d7ad-bb99-4ab1-b25e-afa0c76577b0' 				// Client ID
+		            ,scope: 'sceapp' 				// SEN Scope
+		        ,scope_psn: 'psn:sceapp,user:account.get,user:account.settings.privacy.get,user:account.settings.privacy.update,user:account.realName.get,user:account.realName.update,kamaji:get_account_hash'	// PSN Scope, now edited with more scopes
+		        ,csrfToken: ''						// csrf Token
+		        ,authCode : ''						// authCode needed to ask for an access token
+		    ,client_secret: 'Zo4y8eGIa3oazIEp' 		// Secret string, this is most likely to change overtime. If it changes, please contribute to this project.
+		             ,duid: '00000005006401283335353338373035333434333134313a433635303220202020202020202020202020202020' 	// I still don't know what "duid" stands for... if you do, create an issue about it please!
+		            ,state: '1156936032'
+		   ,service_entity: 'urn:service-entity:psn'
+		      ,paramString: 'c2VydmljZV9lbnRpdHk9cHNuJnJlcXVlc3RfdGhlbWU9bGlxdWlk' // This is extracted from the login page, however it's always the same. "service_entity=psn&request_theme=liquid" in Base64 but we extract it if it changes
 	}
 
 	// URL Vars used for login to PSN and pulling information
 	,psnURL = {
-		SignIN:  		psnVars.SENBaseURL + '/2.0/oauth/authorize?response_type=code&service_entity='+psnVars.service_entity+'&returnAuthCode=true&state='+psnVars.state+'&redirect_uri='+psnVars.redirectURL_oauth+'&client_id='+psnVars.client_id+'&scope='+psnVars.scope_psn // New SEN login page (no csrfToken this time)
-		,SignINPOST: 	psnVars.SENBaseURL + '/login.do'		// POST DATA for login must be sended here
-		,oauth: 		'https://auth.api.sonyentertainmentnetwork.com/2.0/oauth/token' 	// PSN's OAuth implementation Uri
-		,profileData: 	'https://{{region}}-prof.np.community.playstation.net/userProfile/v1/users/{{id}}/profile?fields=%40default,relation,requestMessageFlag,presence,%40personalDetail,trophySummary'
-		,trophyData: 	'https://{{region}}-tpy.np.community.playstation.net/trophy/v1/trophyTitles?fields=%40default&npLanguage={{lang}}&iconSize={{iconsize}}&platform=PS3%2CPSVITA%2CPS4&offset={{offset}}&limit={{limit}}&comparedUser={{id}}'	// NOTE: All server are in the US, the only change are market restrictions
-		,trophyDataList:'https://{{region}}-tpy.np.community.playstation.net/trophy/v1/trophyTitles/{{npCommunicationId}}/trophyGroups/{{groupId}}/trophies?fields=%40default,trophyRare,trophyEarnedRate&npLanguage={{lang}}'
-		,trophyGroupList:'https://{{region}}-tpy.np.community.playstation.net/trophy/v1/trophyTitles/{{npCommunicationId}}/trophyGroups/?npLanguage={{lang}}'
-		,trophyInfo:	'https://{{region}}-tpy.np.community.playstation.net/trophy/v1/trophyTitles/{{npCommunicationId}}/trophyGroups/{{groupId}}/trophies/{{trophyID}}?fields=%40default,trophyRare,trophyEarnedRate&npLanguage={{lang}}'
+		          SignIN: psnVars.SENBaseURL + '/2.0/oauth/authorize?response_type=code&service_entity='+psnVars.service_entity+'&returnAuthCode=true&state='+psnVars.state+'&redirect_uri='+psnVars.redirectURL_oauth+'&client_id='+psnVars.client_id+'&scope='+psnVars.scope_psn // New SEN login page (no csrfToken this time)
+		     ,SignINPOST: psnVars.SENBaseURL + '/login.do'		// POST DATA for login must be sended here
+		          ,oauth: 'https://auth.api.sonyentertainmentnetwork.com/2.0/oauth/token' 	// PSN's OAuth implementation Uri
+		    ,profileData: 'https://{{region}}-prof.np.community.playstation.net/userProfile/v1/users/{{id}}/profile?fields=%40default,relation,requestMessageFlag,presence,%40personalDetail,trophySummary'
+		    ,friendsList: 'https://{{region}}-prof.np.community.playstation.net/userProfile/v1/users/{{id}}/friendList?fields=%40default,relation,onlineId,avatarUrl,plus,personalDetail,trophySummary&friendStatus=friend'
+		     ,trophyData: 'https://{{region}}-tpy.np.community.playstation.net/trophy/v1/trophyTitles?fields=%40default&npLanguage={{lang}}&iconSize={{iconsize}}&platform=PS3%2CPSVITA%2CPS4&offset={{offset}}&limit={{limit}}&comparedUser={{id}}'	// NOTE: All server are in the US, the only change are market restrictions
+		 ,trophyDataList: 'https://{{region}}-tpy.np.community.playstation.net/trophy/v1/trophyTitles/{{npCommunicationId}}/trophyGroups/{{groupId}}/trophies?fields=%40default,trophyRare,trophyEarnedRate&npLanguage={{lang}}'
+		,trophyGroupList: 'https://{{region}}-tpy.np.community.playstation.net/trophy/v1/trophyTitles/{{npCommunicationId}}/trophyGroups/?npLanguage={{lang}}'
+		     ,trophyInfo:	'https://{{region}}-tpy.np.community.playstation.net/trophy/v1/trophyTitles/{{npCommunicationId}}/trophyGroups/{{groupId}}/trophies/{{trophyID}}?fields=%40default,trophyRare,trophyEarnedRate&npLanguage={{lang}}'
 	}
-	,userAgent = 'Mozilla/5.0 (Linux; U; Android 4.3; '+options.npLanguage+'; C6502 Build/10.4.1.B.0.101) AppleWebKit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30 PlayStation App/2.55.8/'+options.npLanguage+'/'+options.npLanguage
+	,userAgent     = 'Mozilla/5.0 (Linux; U; Android 4.3; '+options.npLanguage+'; C6502 Build/10.4.1.B.0.101) AppleWebKit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30 PlayStation App/2.55.8/'+options.npLanguage+'/'+options.npLanguage
 	,requestedWith = 'com.scee.psxandroid'
-	,accessToken = ''
-	,refreshToken = ''
-	,refreshInterval
-	,codeRegex = /redirect\?code=(.{6})/
+	,accessToken   = ''
+	,refreshToken  = ''
+	,codeRegex     = /redirect\?code=(.{6})/
+  ,refreshInterval
 ;
 /*
 * @desc 	Gets/refresh the CSRF token // Issue #3
@@ -67,7 +68,7 @@ var
 */
 function initLogin(callback) {
 	debug('Getting login');
-	request.get({ 
+	request.get({
 			url: psnURL.SignIN
 			, headers : {
 				'User-Agent': userAgent
@@ -206,7 +207,7 @@ function getAccessToken(authCode, callback) {
 				else {
 					debug('ERROR: ' + JSON.stringify(error))
 				}
-		})	
+		})
 	}
 }
 /*
@@ -215,7 +216,7 @@ function getAccessToken(authCode, callback) {
 * @param 	Function 	callback 	- Calls this function once the request is complete
 */
 function psnGETRequest (url, callback) {
-	var 
+	var
 		reqOptions = {
 			url: url
 			,method : 'GET'
@@ -243,7 +244,7 @@ function psnGETRequest (url, callback) {
 					if (responseJSON.error.code === 2105858 || responseJSON.error.code === 2138626) {
 						debug('Token has expired, asking for new one');
 						initLogin(function() {
-							psnGETRequest(url, callback)	
+							psnGETRequest(url, callback)
 						});
 					}
 					else {
@@ -266,7 +267,7 @@ function psnGETRequest (url, callback) {
 * @param 	Function 	callback 	- Calls this function once the request is complete
 */
 function psnPOSTRequest (url, callback) {
-	var 
+	var
 		reqOptions = {
 			 url: url
 			,method : 'POST'
@@ -294,7 +295,7 @@ function psnPOSTRequest (url, callback) {
 					if (responseJSON.error.code === 2105858 || responseJSON.error.code === 2138626) {
 						debug('Token has expired, asking for new one');
 						initLogin(function() {
-							psnGETRequest(url, callback)	
+							psnGETRequest(url, callback)
 						});
 					}
 					else {
@@ -325,12 +326,12 @@ exports.init = function(params, callback) {
 		// Setting up language for results
 		if (languages.indexOf(params.npLanguage) >= 0)
 			options.npLanguage = params.npLanguage
-		else 
+		else
 			debug('Invalid "'+params.npLanguage+'" npLanguage value, using "en" instead');
 		// Setting up server region
-		if (regions.indexOf(params.region) >= 0) 
+		if (regions.indexOf(params.region) >= 0)
 			options.region = params.region
-		else 
+		else
 			debug('Invalid "'+params.region+'" region value, using "us" instead');
 		// Update the language/region
 		Object.keys(psnURL).forEach(function(key) {
@@ -362,6 +363,25 @@ exports.getProfile = function (psnid, callback) {
 		})
 	}
 }
+
+/*
+* @desc 	Get the friends list for the given PSNID
+* @param 	String 		psnid 		- User's PSN ID
+* @param 	Function 	callback 	- Calls this function once the request is complete
+*/
+exports.getFriends = function (psnid, callback) {
+	if (accessToken.length > 1) {
+		debug('Asking friends list for: ' + psnid);
+		psnGETRequest(psnURL.friendsList.replace("{{id}}", psnid),callback);
+	}
+	else {
+		debug('Asking for new token');
+		getAccessToken('',function() {
+			psnGETRequest(psnURL.friendsList.replace("{{id}}", psnid),callback);
+		})
+	}
+}
+
 /*
 * @desc 	Get the detailed trophy title data by PSNID
 * @param 	String 		psnid 		- User's PSN ID
@@ -443,7 +463,7 @@ exports.getTrophy = function (psnid, npCommID, groupId, trophyID, callback) {
 * @param 	String url - The URL (with protocol/port/parameters)
 */
 function psnGETRequestDEBUG (url, callback) {
-	var 
+	var
 		options = {
 			url: url
 			,method : 'GET'
