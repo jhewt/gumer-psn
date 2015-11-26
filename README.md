@@ -48,6 +48,7 @@ Or clone the repository and install the dependencies
 ##Usage
 
 ###Using the example
+#####NOTE: Please replace the login details on top of the file in the example, including the braces.
 This example uses Express
 
     cp example/index.js ./
