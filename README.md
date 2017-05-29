@@ -5,7 +5,7 @@ A Playstation Network API written in Node.js
 
 **v0.2.0**
 
-##About
+## About
 This script uses the method found in Sony's official Android application that sends JSON in every response and NOT xml.
 For now this script can get:
 * Updated profile data. *(1 hour max)*
@@ -14,7 +14,7 @@ For now this script can get:
 	* by gameID (npCommunicationID) 
 	* by group *(DLC, Expansion)*
  
-###Features planned
+### Features planned
 * Caching
 * Friends
  	* Friends management (add, delete, block)
@@ -26,14 +26,14 @@ For now this script can get:
 * User friend list (depends on user's privacy)
 * Gems (Pronuntiation for PS4, and a few console downloads) *NOTE: I will not share SONY's HmacSHA1 key here on GitHub*
 
-##Requirements
+## Requirements
 * A valid PSN account *(can be new)*
 * Node.js / io.js
 
-##Known Limitations
+## Known Limitations
 * It doesn't display **hidden trophies** *this is a server-side restriction*. If you do have another way to get them please share it.
 
-##Installing
+## Installing
 
 You can install it with the package manager
 
@@ -45,10 +45,10 @@ Or clone the repository and install the dependencies
 		cd gumer-psn/
 		npm install
 		
-##Usage
+## Usage
 
-###Using the example
-#####NOTE: Please replace the login details on top of the file in the example, including the braces.
+### Using the example
+##### NOTE: Please replace the login details on top of the file in the example, including the braces.
 This example uses Express
 
     cp example/index.js ./
@@ -63,7 +63,7 @@ Once it has started, you can start asking profile or trophy data by going to:
 *	**Trophies by groupID**: http://localhost:3000/PSN/**your_id**/trophies/**gameID**/groups/**groupID**
 *	**Trophy info by tophyID**: http://localhost:3000/PSN/**your_id**/trophies/**gameID**/**tophyID**
 
-###Init
+### Init
 ```javascript
 var gumerPSN 	= require('./psn');
 	
@@ -76,7 +76,7 @@ gumerPSN.init({		// Our PSN Module, we have to start it once. - irkinsander
 	,region: 	"us"					// The server region that will push data
 });
 ```
-###Getting profile data by ID
+### Getting profile data by ID
 ```javascript
 // ID
 gumerPSN.getProfile('JSachs13', function(error, profileData) { 
@@ -102,7 +102,7 @@ Output:
 	}
 }
 ```
-###Getting trophy summary by userID
+### Getting trophy summary by userID
 ```javascript
 // ID, START, LIMIT
 gumerPSN.getProfile('OSXelot', 0, 10, function(error, trophyData) { 
@@ -146,7 +146,7 @@ It should output 10 trophies formatted like this:
 	]
 }
 ```
-###Getting trophies list by GameID (npCommunicationID)
+### Getting trophies list by GameID (npCommunicationID)
 ```javascript
 // ID (optional, if blank it doesn't compare to that user), GAMEID, GROUPID (optional, if leave blank it displays every trophy (default + DLCs))
 gumerPSN.getGameTrophies('OSXelot', 'NPWR05506_00', '', function(error, trophyData) {
@@ -199,7 +199,7 @@ Output: (Killzone)
 	},	{"..."}]
 }
 ```
-###Getting trophies groups by GameID (npCommunicationID)
+### Getting trophies groups by GameID (npCommunicationID)
 ```javascript
 // ID (optional, if not blank it displays the progression of each group), GAMEID
 gumerPSN.getGameTrophyGroups('OSXelot', 'NPWR05506_00', function(error, trophyData) {
@@ -267,7 +267,7 @@ Output:
 	}]
 }
 ```
-###Getting trophy info by trophyID
+### Getting trophy info by trophyID
 ```javascript
 // ID (optional, if not blank it displays if the user has earned it), GAMEID, GROUPID (Not really necessary here), TROPHYID
 gumerPSN.getTrophy('OSXelot', 'NPWR05506_00', '', 33, function(error, trophyData) {
