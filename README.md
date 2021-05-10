@@ -1,6 +1,9 @@
+# DISCONTINUED, THIS REPO DOES NOT WORK.
+
+Since the introduction of catpchas on all of Sony' sites and apps, none of the login methods listed here will work.
+
 gumer-psn
 =========
-
 A Playstation Network API written in Node.js
 
 **v0.2.0**
